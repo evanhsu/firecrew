@@ -1,0 +1,25 @@
+import { Record } from 'immutable';
+
+export const Item = Record({
+  id: undefined,
+  crewId: undefined,
+  description: undefined,
+  parentId: undefined,
+  serialNumber: undefined,
+  quantity: undefined,
+  type: undefined,
+  category: 'Uncategorized',
+  color: undefined,
+  itemSize: undefined,
+  condition: undefined,
+  checkedOutTo: undefined,
+  checkedOutToId: undefined,
+  checkedOutToType: undefined,
+  note: '',
+  usable: 1,
+  restockTrigger: undefined,
+  restockToQuantity: undefined,
+  source: undefined,
+  createdAt: undefined,
+  updatedAt: undefined,
+});

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Perform first-time setup for this project.
+
+# Create a default .env file from the example
+# NOTE: This must be run from inside the project root folder. TODO: make this more directory-aware
+cp .env.example .env
+
+# Install PHP composer dependencies. This needs to happen before the main application container can start.
+# The Dockerfile expects the WWWGROUP env variable to be set. If you're using the Laravel Sail CLI, it sets
+# this env variable for you. Even if you're using Sail, it isn't installed yet so we can't run it yet.
+# See here: https://github.com/laravel/sail/blob/1.x/bin/sail#L26
+(export WWWGROUP=$(id -g); export WWWUSER=$UID; docker compose run laravel.test composer install)
