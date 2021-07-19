@@ -17,7 +17,7 @@
 	        </ul>
 	    </div>
 	    @endif
-	
+
 		<table class="table">
 			<thead>
 				<tr><th>ID</th>
@@ -30,11 +30,11 @@
 			@foreach($crews as $crew)
 				<tr>
 					<td>{{ $crew->id }}</td>
-					<td><a href="{{ route('edit_crew', array('id' => $crew->id)) }}">{{ $crew->name }}</a></td>
+					<td><a href="{{ route('edit_crew', array('crewId' => $crew->id)) }}">{{ $crew->name }}</a></td>
 					<td>
                         <a href="{{ route('new_status_for_crew',$crew->id) }}" class="btn btn-primary" role="button">!</a>
 					</td>
-					
+
 					<td><form action="{{ route('destroy_crew',$crew->id) }}" method="POST" class="form-inline">
 							{{ csrf_field() }}
 							<button type="submit" class="btn btn-sm btn-danger">X</button>

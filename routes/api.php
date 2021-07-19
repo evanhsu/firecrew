@@ -18,7 +18,7 @@ $api->version('v1', [], function (Router $api) {
 |
 */
 
-        $api->get('/status/all', '\App\Http\Controllers\Status\ResourceStatusController@currentForAllResources');
+        $api->get('/status/all', 'Status\ResourceStatusController@currentForAllResources');
     //  $api->post('/status',       array('as' => 'create_status',      'uses' => 'StatusController@store' ));
         $api->get('/summary', 'Status\SummaryController@indexApi');
 

@@ -3,9 +3,9 @@ import ReactDOM from "react-dom";
 import { createStore, applyMiddleware, compose } from "redux";
 import { Provider } from "react-redux";
 import thunkMiddleware from "redux-thunk";
-import { ConnectedRouter, routerMiddleware } from "react-router-redux";
+import {  routerMiddleware } from "react-router-redux";
 import { BrowserRouter } from "react-router-dom";
-import createHistory from "history/createBrowserHistory";
+import { createBrowserHistory } from 'history';
 import { fromJS } from "immutable";
 import injectTapEventPlugin from "react-tap-event-plugin";
 import Perf from "react-addons-perf";
@@ -23,7 +23,7 @@ injectTapEventPlugin();
 window.Perf = Perf;
 
 // Create a browser history for use with React Router
-const history = createHistory();
+const history = createBrowserHistory();
 
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose; // eslint-disable-line no-underscore-dangle
 const initialState = fromJS({});
@@ -33,8 +33,8 @@ const store = createStore(
     initialState,
     composeEnhancers(
         applyMiddleware(
-            thunkMiddleware // lets us dispatch() functions
-            // routerMiddleware(history)
+            thunkMiddleware, // lets us dispatch() functions
+            routerMiddleware(history)
         )
     )
 );

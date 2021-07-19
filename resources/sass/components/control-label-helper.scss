@@ -1,0 +1,9 @@
+.control-label-with-helper {
+	padding-right: 0 !important;
+}
+
+@media screen and (min-width: $screen-md-min) {
+	.control-label-helper {
+		float: left;
+	}
+}

@@ -1,4 +1,5 @@
 <?php
+namespace Database\Seeders;
 
 use App\Domain\Aircrafts\RappelHelicopter;
 use App\Domain\Aircrafts\ShortHaulHelicopter;
