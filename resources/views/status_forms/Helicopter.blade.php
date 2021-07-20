@@ -42,6 +42,20 @@
             </div>
         </div>
         @endif
+        @if(!is_null($resource->staffingCategory3()))
+            <div class="form-group">
+                <label for="staffing_value3" class="col-md-3 control-label control-label-with-helper">
+                    {{ $resource->staffingCategory3() }}
+                </label>
+                <a role="button" class="control-label-helper" tabindex="0" data-toggle="popover" title="{{ $resource->staffingCategory3() }}" data-trigger="focus" data-content="{{ $resource->staffingCategory3Explanation() }}">
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                </a>
+                <div class="col-md-3">
+                    <input type="text" name="staffing_category3" id="staffing_category3" class="hidden" value="{{ $resource->staffingCategory3() }}">
+                    <input type="text" name="staffing_value3" id="staffing_value3" class="form-control" value="{{ $status->staffing_value3 }}">
+                </div>
+            </div>
+        @endif
         <div class="form-group">
             <label for="manager_name" class="col-md-3 control-label control-label-with-helper">Manager</label>
             <a role="button" class="control-label-helper" tabindex="0" data-toggle="popover" title="Manager" data-trigger="focus" data-content="Enter the name of the person who is currently managing the aircraft, i.e. the person who should be contacted about staffing or mission requests.">

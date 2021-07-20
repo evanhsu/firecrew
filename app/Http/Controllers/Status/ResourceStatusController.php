@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Input;
 use Carbon\Carbon;
 use App\Domain\Crews\Crew;
 use App\Domain\Statuses\ResourceStatus;
@@ -78,7 +77,7 @@ class ResourceStatusController extends Controller
         $longitude_dd = $this->decMinToDecDeg($request->get('longitude_deg'), $request->get('longitude_min')) * -1.0; // Convert to 'Easting' (Western hemisphere is negative)
 
         // Form is valid, continue...
-        $status = new ResourceStatus(Input::all());
+        $status = new ResourceStatus($request->all());
 
         // Add a period to the LabelText field - this is a a workaround for the ArcGIS server to be able to render a buffer around the shorthaulhelicopter features
         $status->label_text = ".";
@@ -119,7 +118,7 @@ class ResourceStatusController extends Controller
         // can have a status (e.g. Shorthaulhelicopter.blade.php, etc)
         //
         // $folder designates the subfolder within the /views/map_popups/ folder that will be searched for a matching View template.
-        // This allows a different View to be rendered for local display versus the one that sent to the EGP database. 
+        // This allows a different View to be rendered for local display versus the one that sent to the EGP database.
         //
         // All properties of the Status object must be defined before calling this method.
         $v = view('map_popups.'.$folder.".".$status->statusable_resource_type)->with("status",$status)->with("crew",$crew)->render();

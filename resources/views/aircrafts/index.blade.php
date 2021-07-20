@@ -38,7 +38,7 @@
                             <td>{{ $a->model }}</td>
                             <td id="crew-name-cell">
                                 @if(!empty($a->crew_id))
-                                    <a href="{{ route('edit_crew', array('id' => $a->crew_id)) }}">{{ $a->crew->name }}</a>
+                                    <a href="{{ route('edit_crew', array('crewId' => $a->crew_id)) }}">{{ $a->crew->name }}</a>
                                 @endif
                             </td>
                             <td id="update-button-cell">

@@ -1,12 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { createStore, applyMiddleware, compose } from "redux";
-import { Provider } from "react-redux";
+import {applyMiddleware, compose, createStore} from "redux";
+import {Provider} from "react-redux";
 import thunkMiddleware from "redux-thunk";
-import {  routerMiddleware } from "react-router-redux";
-import { BrowserRouter } from "react-router-dom";
-import { createBrowserHistory } from 'history';
-import { fromJS } from "immutable";
+import {BrowserRouter} from "react-router-dom";
+import {fromJS} from "immutable";
 import injectTapEventPlugin from "react-tap-event-plugin";
 import Perf from "react-addons-perf";
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
@@ -22,9 +20,6 @@ injectTapEventPlugin();
 // React perf addon - for debugging performance issues
 window.Perf = Perf;
 
-// Create a browser history for use with React Router
-const history = createBrowserHistory();
-
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose; // eslint-disable-line no-underscore-dangle
 const initialState = fromJS({});
 
@@ -33,8 +28,7 @@ const store = createStore(
     initialState,
     composeEnhancers(
         applyMiddleware(
-            thunkMiddleware, // lets us dispatch() functions
-            routerMiddleware(history)
+            thunkMiddleware,
         )
     )
 );
@@ -42,7 +36,7 @@ const store = createStore(
 if (document.getElementById("react-root")) {
     ReactDOM.render(
         <Provider store={store}>
-            <BrowserRouter history={history}>
+            <BrowserRouter >
                 <MuiThemeProvider>
                     <Routes />
                 </MuiThemeProvider>
