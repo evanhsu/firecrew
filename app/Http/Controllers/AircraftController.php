@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Aircrafts\Aircraft;
 use App\Domain\StatusableResources\AbstractStatusableResource;
+use App\Http\Middleware\CapitalizeTailnumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +17,7 @@ class AircraftController extends Controller
         // Use the 'CapitalizeTailnumber' middleware to make sure that all
         // tailnumbers extracted from URLs are converted to all caps before
         // they reach the controller logic.
-        $this->middleware('capitalizeTailnumber');
+        $this->middleware(CapitalizeTailnumber::class);
     }
 
 

@@ -1,0 +1,134 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  padding-bottom: 50px; /* Compensate for the height of the fixed top navbar */
+}
+
+#app {
+  min-height: 100%;
+}
+
+#content {
+  padding: 0px;
+  width: 100%;
+  min-width: 100%;
+  overflow: hidden;
+}
+
+#login-wrapper {
+  padding-top: 15px;
+  padding-bottom: 100px
+}
+
+#forgot-password {
+  width: 100%;
+  text-align: right;
+}
+
+#forgot-password a,
+#forgot-password a:active,
+#forgot-password a:visited,
+#forgot-password a:hover {
+  font-size: 0.8em;
+  color: #aaddaa;
+  font-weight: bold;
+}
+
+#forgot-password a:hover {
+  color: #777777;
+  text-decoration: none;
+}
+
+.form-box {
+  background-color: #ffffff;
+  border: 1px solid #555555;
+  opacity: 0.8;
+  filter: alpha(opacity=80); /* For IE8 and ealier */
+  margin: 20px auto 100px auto;
+  padding: 15px 15px 50px 15px;
+  text-align: left;
+}
+
+.background-container {
+  background: url('/images/map-lg-dim.jpg');
+  background-size: cover;
+  position:fixed;
+  height:100%;
+  width: 100%;
+  overflow-y: scroll;
+  text-align: center;
+  padding-top: 20px;
+}
+
+.fullscreen {
+  background-size: cover;
+  position:fixed;
+  height:100%;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.crew-aircraft-form {
+  background-color: #fafafa;
+  border: 1px solid #777777;
+  padding: 10px;
+  margin: 10px;
+}
+
+.dynamic-form-template {
+  display: none;
+}
+
+.page-header, h1 {
+  font-size: 2.2em;
+}
+
+h2 {
+  font-size: 1.9em;
+}
+
+h3 {
+  font-size: 1.7em;
+}
+
+.freshness_notification {
+  margin-top: 5px;
+  margin-bottom: 0;
+}
+
+.slide-enter {
+  max-height: 0px;
+}
+
+.slide-enter.slide-enter-active {
+  max-height: 300px;
+  transition: max-height 300ms ease-in;
+}
+
+.slide-leave {
+  max-height: 200px;
+}
+
+.slide-leave.slide-leave-active {
+  max-height: 0px;
+  overflow: hidden;
+  transition: max-height 250ms ease-in, background-color 250ms ease-in;
+}
+
+.navbar-center-brand {
+  float: none !important;
+  margin-top: 20px !important;
+  display: inline-block !important;
+  font-size: 10px;
+  font-variant: small-caps;
+}
+
+.navbar-logo {
+	margin: -15px 0 0 -15px;
+	padding-bottom: 25px;
+	height: 80px;
+	width: auto;
+}

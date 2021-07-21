@@ -4,6 +4,6 @@
 // display and returns $menubar_type
 //
 // Invokes 'app/Http/ViewComposers/MenubarComposer.php'
-// This binding is registered in 'app/Providers/ComposerServiceProvider.php'
+// This binding is registered in 'app/Providers/ViewServiceProvider.php'
 ?>
 @include('menubar.'.(isset($menubar_type) ? $menubar_type : 'guest'))

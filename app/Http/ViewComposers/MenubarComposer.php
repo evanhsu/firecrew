@@ -13,6 +13,7 @@ class MenubarComposer
      */
     protected $menubar_type;
     protected $active_menubutton;
+    protected $crew_id;
 
     /**
      *
@@ -64,7 +65,7 @@ class MenubarComposer
     {
         $view->with([
             'menubar_type' => $this->menubar_type,
-            'active_menubutton' => 'summary', //$this->active_menubutton,
+            'active_menubutton' => $this->active_menubutton,
             'user_crew_id' => $this->crew_id,
         ]);
     }

@@ -1,9 +1,11 @@
-<?php namespace App\Providers;
+<?php
+namespace App\Providers;
 
-use View;
+use App\Http\ViewComposers\MenubarComposer;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
-class ComposerServiceProvider extends ServiceProvider {
+class ViewServiceProvider extends ServiceProvider {
 
     /**
      * Specify that the MenubarComposer should be called whenever the 'menubar' View is invoked
@@ -15,7 +17,7 @@ class ComposerServiceProvider extends ServiceProvider {
         // Bind each Composer to its Views
 
         // The MenubarComposer should be called whenever the 'menubar' View is invoked
-        View::composer('menubar', 'App\Http\ViewComposers\MenubarComposer');
+        View::composer('menubar', MenubarComposer::class);
     }
 
     /**

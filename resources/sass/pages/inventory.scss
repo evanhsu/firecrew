@@ -1,0 +1,30 @@
+#inventory {
+
+	padding-left: 40px;
+
+	.drawer-toggle-button {
+		position: fixed;
+		top: 100px;
+		left: 37px;
+		transform: rotate(90deg);
+		transform-origin: left top 0;
+	}
+
+	.expandablerow-enter {
+		max-height: 0px;
+	}
+
+	.expandablerow-enter.expandablerow-enter-active {
+		max-height: 100px; //$expandable-row-height;
+		transition: max-height 500ms ease-in;
+	}
+
+	.expandablerow-leave {
+		max-height: 100px; //$expandable-row-height;
+	}
+
+	.expandablerow-leave.expandablerow-leave-active {
+		max-height: 0;
+		transition: max-height 300ms ease-out;
+	}
+}

@@ -23,6 +23,8 @@ class ResourceStatus extends Model
         'staffing_value1',
         'staffing_category2',
         'staffing_value2',
+        'staffing_category3',
+        'staffing_value3',
         'manager_name',
         'manager_phone',
         'comments1',

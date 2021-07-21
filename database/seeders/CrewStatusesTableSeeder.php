@@ -1,4 +1,5 @@
 <?php
+namespace Database\Seeders;
 
 use App\Domain\Crews\Crew;
 use Illuminate\Database\Seeder;

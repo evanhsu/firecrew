@@ -1,4 +1,5 @@
 <?php
+namespace Database\Seeders;
 
 use App\Domain\StatusableResources\RappelHelicopter;
 use App\Domain\StatusableResources\ShortHaulHelicopter;
