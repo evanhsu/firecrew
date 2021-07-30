@@ -9,8 +9,10 @@ class HelitackHelicopter extends AbstractStatusableResource implements Statusabl
     protected static $staffing_category1_explanation = "Enter the number of HECMs currently staffing this helicopter (not including the acting manager)";
     protected static $staffing_category2 = null;
     protected static $staffing_category2_explanation = null;
+    protected static $staffing_category3 = null;
+    protected static $staffing_category3_explanation = null;
 
-    public static function resourceType()
+    public static function resourceType():string
     {
         return self::$resource_type;
     }
@@ -33,5 +35,15 @@ class HelitackHelicopter extends AbstractStatusableResource implements Statusabl
     public static function staffingCategory2Explanation()
     {
         return self::$staffing_category2_explanation;
+    }
+
+    public static function staffingCategory3()
+    {
+        return self::$staffing_category3;
+    }
+
+    public static function staffingCategory3Explanation()
+    {
+        return self::$staffing_category3_explanation;
     }
 }
