@@ -12,7 +12,7 @@ class RappelHelicopter extends AbstractStatusableResource implements StatusableR
     protected static $staffing_category3 = "HRAPs Committed";
     protected static $staffing_category3_explanation = "Enter the number of HRAPs that are currently committed to IA fires, project fires, or other assignments.";
 
-    public static function resourceType()
+    public static function resourceType():string
     {
         return self::$resource_type;
     }

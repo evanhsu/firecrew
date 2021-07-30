@@ -8,8 +8,10 @@ class ShortHaulHelicopter extends AbstractStatusableResource implements Statusab
     protected static $staffing_category1_explanation = "Enter the number of HAUL-qualified crewmembers currently staffing the aircraft.";
     protected static $staffing_category2 = "EMT";
     protected static $staffing_category2_explanation = "Enter the number of EMTs currently staffing the aircraft.";
+    protected static $staffing_category3 = null;
+    protected static $staffing_category3_explanation = null;
 
-    public static function resourceType()
+    public static function resourceType(): string
     {
         return self::$resource_type;
     }
@@ -32,5 +34,15 @@ class ShortHaulHelicopter extends AbstractStatusableResource implements Statusab
     public static function staffingCategory2Explanation()
     {
         return self::$staffing_category2_explanation;
+    }
+
+    public static function staffingCategory3()
+    {
+        return self::$staffing_category3;
+    }
+
+    public static function staffingCategory3Explanation()
+    {
+        return self::$staffing_category3_explanation;
     }
 }
