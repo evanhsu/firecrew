@@ -1,0 +1,11 @@
+.idea
+.env
+.git*
+docker
+node_modules
+storage/logs/*
+storage/sessions/*
+storage/testing/*
+tests
+travis
+vendor
