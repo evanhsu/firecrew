@@ -4,8 +4,9 @@
 docker
 node_modules
 storage/logs/*
-storage/sessions/*
-storage/testing/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
 tests
 travis
 vendor
