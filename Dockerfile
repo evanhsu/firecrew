@@ -14,16 +14,13 @@ RUN ["yarn", "production"]
 
 
 
-FROM webdevops/php-nginx:8.0-alpine
+# The webdevops image has all the php extensions + composer installed
+# It's convenient for the build stage and can be used as the final image if image size isn't a concern.
+# The image from this stage is about ~850MB
+FROM webdevops/php-nginx:8.0-alpine AS php-build
 
 # Install Laravel framework system requirements (https://laravel.com/docs/8.x/deployment#optimizing-configuration-loading)
 RUN apk add oniguruma-dev postgresql-dev libxml2-dev
-
-# If we need to install new PHP extensions in the future, this is how to do it
-# https://github.com/docker-library/docs/blob/67b8e44b05b82cf39a35083f3f36027df5a264b9/php/README.md#how-to-install-more-php-extensions
-# RUN docker-php-ext-install \
-#         tokenizer \
-#         xml
 
 ENV WEB_DOCUMENT_ROOT /app/public
 ENV APP_ENV production
@@ -36,14 +33,37 @@ COPY --from=frontend-build /app/public /app/public
 
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Optimizing Configuration loading
-# DISABLE this to allow env vars to be read from the system environment
-# RUN php artisan config:cache
-
-# Optimizing Route loading
+# Build static files for Laravel to improve performance
 RUN php artisan route:cache
 RUN php artisan api:cache
-# Optimizing View loading
 RUN php artisan view:cache
+# RUN php artisan config:cache # DISABLE this to allow env vars to be read from the system environment
 
-RUN chown -R application:application .
+# chown not necessary if this container isn't the final stage
+# RUN chown -R application:application .
+
+
+
+# Copy everything to a much smaller php-nginx container (~240MB)
+FROM trafex/php-nginx:2.1.0
+
+USER root
+
+# Install Laravel framework system requirements (https://laravel.com/docs/8.x/deployment#server-requirements)
+RUN apk add \
+        libxml2-dev \
+        php8-tokenizer \
+        php8-mbstring \
+        php8-pdo_mysql
+        # postgresql-dev \
+        # php8-pdo_pgsql
+
+COPY ./nginx.conf /etc/nginx/nginx.conf
+
+WORKDIR /var/www/html
+
+COPY --from=php-build /app /var/www/html
+
+RUN chown -R nobody:nobody .
+
+USER nobody
