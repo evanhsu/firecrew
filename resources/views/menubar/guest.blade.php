@@ -2,11 +2,12 @@
 $active_menubutton = 'summary';
 $a = strtolower($active_menubutton);
 
-function is_active($button, $active_menubutton)
-{
-    // Decide whether to style the requested menu link with the "active" class
-    // The $active_menubutton variable is set in the MenubarComposer
-    echo ($button == $active_menubutton) ? " class=\"active\"" : "";
+if (!function_exists('is_active')) {
+    function is_active($button, $active_menubutton) {
+        // Decide whether to style the requested menu link with the "active" class
+        // The $active_menubutton variable is set in the MenubarComposer
+        echo ($button == $active_menubutton) ? " class=\"active\"" : "";
+    }
 }
 ?>
 
