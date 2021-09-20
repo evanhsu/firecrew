@@ -76,3 +76,23 @@ Run the production image like this:
         -e DB_PASSWORD=password \
         -e APP_KEY=base64:JBaRbt7KFN7OJHhTsXWYnEjZmweUjsJkCdILJpVaxI8= \
         firecrew-app
+
+## Pushing a new tag to the container registry
+
+You'll need the DigitalOcean CLI: https://docs.digitalocean.com/reference/doctl/how-to/install/
+
+After you've built a new image, get the first 7 characters of the git commit
+hash like this (we're going to use this as the tag for this docker image):
+
+    git rev-parse --short HEAD
+
+Now tag the image (referencing it by the name: `firecrew-app`):
+
+    docker tag firecrew-app registry.digitalocean.com/firecrew/firecrew-app:<GIT_SHA>
+
+Now push the image to the container registry:
+
+    docker push registry.digitalocean.com/firecrew/firecrew-app:<GIT_SHA>
+
+Because of the storage limitations of the free-tier container registry,
+**you may need to delete images before you can push a new one.**
