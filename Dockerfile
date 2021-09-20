@@ -66,4 +66,6 @@ COPY --from=php-build /app /var/www/html
 
 RUN chown -R nobody:nobody .
 
+EXPOSE 80
+
 USER nobody
