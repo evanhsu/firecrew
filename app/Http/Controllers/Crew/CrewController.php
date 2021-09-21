@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Input;
 use Illuminate\Support\MessageBag;
 
 
@@ -53,9 +52,6 @@ class CrewController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
@@ -69,7 +65,7 @@ class CrewController extends Controller
             'name' => 'required|unique:crews|max:255']);
 
         // Form is valid, continue...
-        $crew = new Crew(Input::all());
+        $crew = new Crew($request->all());
 
         if ($crew->save()) {
             return redirect()->route('crews_index');
