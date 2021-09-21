@@ -6,6 +6,7 @@ use App\Domain\Aircrafts\Aircraft;
 use App\Domain\Crews\Crew;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\MessageBag;
@@ -134,7 +135,7 @@ class CrewController extends Controller
 
 
         // Grab the form input
-        $crew_fields = array_except($request->input('crew'), ['statusableResources']);
+        $crew_fields = Arr::except($request->input('crew'), ['statusableResources']);
 
         $crew = Crew::find($id);
 
