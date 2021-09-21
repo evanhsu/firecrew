@@ -59,6 +59,7 @@ RUN apk add \
         # php8-pdo_pgsql
 
 COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY ./php.ini /etc/php8/conf.d/settings.ini
 
 WORKDIR /var/www/html
 
