@@ -17,6 +17,7 @@ $api->version('v1', [], function (Router $api) {
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+        $api->get('/healthz', 'HealthzController@get');
 
         $api->get('/status/all', 'Status\ResourceStatusController@currentForAllResources');
     //  $api->post('/status',       array('as' => 'create_status',      'uses' => 'StatusController@store' ));
