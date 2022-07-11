@@ -96,3 +96,38 @@ Now push the image to the container registry:
 
 Because of the storage limitations of the free-tier container registry,
 **you may need to delete images before you can push a new one.**
+
+## Run database migrations
+
+You'll need to apply the db schema when you first set up the application:
+
+    php artisan db:migrate --force
+
+In a production (kubernetes) environment, you can connect to an application pod like this:
+
+    kubectl get pods
+
+    NAME                            READY   STATUS    RESTARTS   AGE
+    firecrew-app-787dcc958f-9pcpr   1/1     Running   0          73m
+    mysql-594664c854-hwzrg          1/1     Running   0          4h21m
+
+Then you can open a terminal inside the app pod:
+
+    kubectl exec -it firecrew-app-787dcc958f-9pcpr -- /bin/sh
+
+...and then you can run migrations.
+
+## Or restore a db backup
+
+Assuming you have a `.sql` backup file (e.g. from `mysqldump`),
+copy it to the kubernetes pod and run the `SqlDumpSeeder` to apply it to the db:
+
+    kubectl cp ./db_backup.sql <POD_NAME>:/var/www/html/
+    kubectl exec -it <POD_NAME> -- /bin/sh
+
+    /var/www/html $ php artisan db:seed --class=SqlDumpSeeder
+
+## Creating a db backup from the production server
+
+    sudo -iu firecrew
+    mysqldump --user=firecrew --databases firecrew --add-drop-table --comments --result-file=./db_backup.sql
