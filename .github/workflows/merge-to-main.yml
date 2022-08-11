@@ -41,7 +41,7 @@ jobs:
       # Build a Docker image and tag it with the $GITHUB_SHA
       # Also tag it with 'main' to denote that this image is built from the tip of the 'main' branch
       - name: Build image
-        run: docker build -t registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} -t latest .
+        run: docker build -t registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} -t registry.digitalocean.com/firecrew/firecrew-app:latest .
 
       - name: Push image to DigitalOcean Container Registry
         run: docker image push --all-tags registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }}
