@@ -29,5 +29,7 @@ jobs:
         with:
           workflow: Update image tag
           repo: evanhsu/smirksoftware-k8s
+          # Always trigger the target workflow on the main branch of the target repo
+          ref: main
           token: ${{ steps.deploy-pat.outputs.token }}
           inputs: '{ "app": "firecrew", "environment": "prod", "image": "firecrew/firecrew-app", "tag": "${{ steps.shortsha.outputs.shortsha }}"}'
