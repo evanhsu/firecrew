@@ -33,3 +33,12 @@ jobs:
           ref: main
           token: ${{ steps.deploy-pat.outputs.token }}
           inputs: '{ "app": "firecrew", "environment": "prod", "image": "firecrew/firecrew-app", "tag": "${{ steps.shortsha.outputs.shortsha }}"}'
+
+      - name: Login to DigitalOcean container registry
+        run: docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} registry.digitalocean.com
+
+      - name: Add 'prod' tag to the docker image in the container registry
+        run: |
+          docker pull registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }}
+          docker tag registry.digitalocean.com/firecrew/firecrew-app prod
+          docker push registry.digitalocean.com/firecrew/firecrew-app:prod
