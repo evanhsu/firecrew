@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-and-push-image-to-registry:
-    name: Build and push image to registry
+    name: Build image & deploy to dev
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
