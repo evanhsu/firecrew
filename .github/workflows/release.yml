@@ -40,5 +40,5 @@ jobs:
       - name: Add 'prod' tag to the docker image in the container registry
         run: |
           docker pull registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }}
-          docker tag registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} prod
+          docker tag registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} registry.digitalocean.com/firecrew/firecrew-app:prod
           docker push registry.digitalocean.com/firecrew/firecrew-app:prod
