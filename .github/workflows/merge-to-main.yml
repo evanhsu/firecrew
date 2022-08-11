@@ -1,4 +1,4 @@
-name: "Build & push image"
+name: "Build image & deploy to dev"
 
 on:
   workflow_dispatch:
@@ -50,6 +50,6 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: Update image tag
-          repo: evanhsu/smirksoftware-k8
+          repo: evanhsu/smirksoftware-k8s
           token: ${{ steps.deploy-pat.outputs.token }}
           inputs: '{ "app": "firecrew", "environment": "dev", "image": "firecrew/firecrew-app", "tag": "${{ steps.shortsha.outputs.shortsha }}"}'
