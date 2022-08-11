@@ -1,0 +1,33 @@
+name: "Release"
+
+on:
+  workflow_dispatch:
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+  release:
+    types: [published]
+
+jobs:
+  update-k8s-manifest:
+    name: Update k8s manifest with release version
+    runs-on: ubuntu-latest
+    steps:
+      # This workflow assumes that the GITHUB_SHA that triggered this action already has a Docker image tagged
+      # in the Container Registry (presumably put there by the 'merge-to-main.yml' workflow)
+      - name: Get short-sha
+        id: shortsha
+        run: echo "::set-output name=shortsha::$(echo $GITHUB_SHA | head -c7)"
+
+      # Uses credentials from the evanhsu/AuthBot Github App (https://github.com/settings/installations/28169783)
+      - id: deploy-pat
+        uses: getsentry/action-github-app-token@v1
+        with:
+          app_id: ${{ secrets.AUTHBOT_APP_ID }}
+          private_key: ${{ secrets.AUTHBOT_PRIVATE_KEY }}
+
+      - name: Update image tag in k8s deployment repo
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Update image tag
+          repo: evanhsu/smirksoftware-k8
+          token: ${{ steps.deploy-pat.outputs.token }}
+          inputs: '{ "app": "firecrew", "environment": "prod", "image": "firecrew/firecrew-app", "tag": "${{ steps.shortsha.outputs.shortsha }}"}'

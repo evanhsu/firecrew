@@ -1,0 +1,55 @@
+name: "Build & push image"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+      - "tests/**"
+
+jobs:
+  build-and-push-image-to-registry:
+    name: Build and push image to registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # - name: Install doctl
+      #   uses: digitalocean/action-doctl@v2
+      #   with:
+      #     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      # - name: Log in to DigitalOcean Container Registry with short-lived credentials
+      #   run: doctl registry login --expiry-seconds 1200
+
+      - name: Get short-sha
+        id: shortsha
+        run: echo "::set-output name=shortsha::$(echo $GITHUB_SHA | head -c7)"
+
+      # Uses credentials from the evanhsu/AuthBot Github App (https://github.com/settings/installations/28169783)
+      - id: deploy-pat
+        uses: getsentry/action-github-app-token@v1
+        with:
+          app_id: ${{ secrets.AUTHBOT_APP_ID }}
+          private_key: ${{ secrets.AUTHBOT_PRIVATE_KEY }}
+
+      - name: Login to DigitalOcean container registry
+        run: docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} registry.digitalocean.com
+
+      # Build a Docker image and tag it with the $GITHUB_SHA
+      # Also tag it with 'main' to denote that this image is built from the tip of the 'main' branch
+      - name: Build image
+        run: docker build -t registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} -t main .
+
+      - name: Push image to DigitalOcean Container Registry
+        run: docker push registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }}
+
+      - name: Update image tag in k8s deployment repo
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Update image tag
+          repo: evanhsu/smirksoftware-k8
+          token: ${{ steps.deploy-pat.outputs.token }}
+          inputs: '{ "app": "firecrew", "environment": "dev", "image": "firecrew/firecrew-app", "tag": "${{ steps.shortsha.outputs.shortsha }}"}'
