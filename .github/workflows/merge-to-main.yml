@@ -44,12 +44,14 @@ jobs:
         run: docker build -t registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} -t registry.digitalocean.com/firecrew/firecrew-app:latest .
 
       - name: Push image to DigitalOcean Container Registry
-        run: docker push registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }}
+        run: docker push registry.digitalocean.com/firecrew/firecrew-app
 
       - name: Update image tag in k8s deployment repo
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: Update image tag
           repo: evanhsu/smirksoftware-k8s
+          # Always trigger the target workflow on the main branch of the target repo
+          ref: main
           token: ${{ steps.deploy-pat.outputs.token }}
           inputs: '{ "app": "firecrew", "environment": "dev", "image": "firecrew/firecrew-app", "tag": "${{ steps.shortsha.outputs.shortsha }}"}'
