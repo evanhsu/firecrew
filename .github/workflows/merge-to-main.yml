@@ -26,6 +26,7 @@ jobs:
 
       - name: Check for an active garbage collection process in the container registry
         id: active-garbage-collection
+        continue-on-error: true
         run: |
           GC=$(doctl registry garbage-collection get-active --format UUID,RegistryName,Status --output json)
           echo "::set-output name=uuid::$(echo $GC | jq -r '.[0].uuid')"
