@@ -32,6 +32,24 @@ jobs:
       - name: Log in to DigitalOcean Container Registry with short-lived credentials
         run: doctl registry login --expiry-seconds 1200
 
+      # This step will exit with an error if there's no active garbage collection in progress.
+      # So we'll need to continue-on-error to handle that scenario.
+      - name: Check for an active garbage collection process in the container registry
+        id: active-garbage-collection
+        continue-on-error: true
+        run: |
+          GC=$(doctl registry garbage-collection get-active --format UUID,RegistryName,Status --output json)
+          echo "::set-output name=uuid::$(echo $GC | jq -r '.[0].uuid')"
+          echo "Found active garbage collection in progress: $GC"
+
+      # The DigitalOcean container registry is read-only during garbage collection, which can last 15 minutes or so.
+      # We need to cancel the current garbage collection process so that we can push the new image tag
+      - name: Cancel any active garbage collection in the container registry
+        if: steps.active-garbage-collection.outputs.uuid != ''
+        run: |
+          doctl registry garbage-collection cancel ${{ steps.active-garbage-collection.outputs.uuid }}
+          sleep 10s
+
       - name: Update image tag in k8s deployment repo
         uses: benc-uk/workflow-dispatch@v1
         with:
