@@ -31,7 +31,7 @@ jobs:
           echo "::set-output name=uuid::$(echo $GC | jq -r '.[0].uuid')"
 
       - name: Cancel any active garbage collection in the container registry
-        if: steps.active-garbage-collection.outputs.uuid != ""
+        if: steps.active-garbage-collection.outputs.uuid != ''
         run: doctl registry garbage-collection cancel {{ steps.active-garbage-collection.outputs.uuid }}
 
       - name: Get short-sha
