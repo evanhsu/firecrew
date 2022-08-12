@@ -54,7 +54,7 @@ jobs:
 
       - name: List images from container registry
         run: |
-          TAGS=$(doctl registry repository lt firecrew-app --format Tag,UpdatedAt)
+          TAGS=$(doctl registry repository list-manifests firecrew-app --format Digest,Tags --output json)
           echo $TAGS
 
       - name: Delete unused images from container registry
