@@ -16,13 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # - name: Install doctl
-      #   uses: digitalocean/action-doctl@v2
-      #   with:
-      #     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      # - name: Log in to DigitalOcean Container Registry with short-lived credentials
-      #   run: doctl registry login --expiry-seconds 1200
+      - name: Log in to DigitalOcean Container Registry with short-lived credentials
+        run: doctl registry login --expiry-seconds 1200
 
       - name: Get short-sha
         id: shortsha
@@ -34,9 +34,6 @@ jobs:
         with:
           app_id: ${{ secrets.AUTHBOT_APP_ID }}
           private_key: ${{ secrets.AUTHBOT_PRIVATE_KEY }}
-
-      - name: Login to DigitalOcean container registry
-        run: docker login -u ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }} registry.digitalocean.com
 
       # Build a Docker image and tag it with the $GITHUB_SHA
       # Also tag it with 'main' to denote that this image is built from the tip of the 'main' branch
@@ -55,3 +52,13 @@ jobs:
           ref: main
           token: ${{ steps.deploy-pat.outputs.token }}
           inputs: '{ "app": "firecrew", "environment": "dev", "image": "firecrew/firecrew-app", "tag": "${{ steps.shortsha.outputs.shortsha }}"}'
+
+      - name: Delete unused images from container registry
+        run: |
+          ALL_MANIFESTS=$(doctl registry repository list-manifests firecrew-app --format Digest,Tags --output json)
+          STALE_MANIFESTS=$(echo $ALL_MANIFESTS | jq -c -r '. - map( select(.tags[] | contains("latest", "prod"))) | [.[].digest] | unique | join(" ")')
+          [[ -n $STALE_MANIFESTS ]] && doctl registry repository delete-manifest firecrew-app $STALE_MANIFESTS --force
+          echo Manifests removed: $STALE_MANIFESTS
+
+      - name: Run garbage collection in the DigitalOcean Container Registry
+        run: doctl registry garbage-collection start --include-untagged-manifests
