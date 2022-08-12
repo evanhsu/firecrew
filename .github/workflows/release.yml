@@ -47,10 +47,3 @@ jobs:
           docker pull registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }}
           docker tag registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} registry.digitalocean.com/firecrew/firecrew-app:prod
           docker push registry.digitalocean.com/firecrew/firecrew-app:prod
-
-      - name: Delete unused images from container registry.
-        run: |
-          ALL_MANIFESTS=$(doctl registry repository list-manifests firecrew-app --format Digest,Tags --output json)
-          STALE_MANIFESTS=$(echo $ALL_MANIFESTS | jq -c -r '. - map( select(.tags[] | contains("latest", "prod"))) | [.[].digest] | unique | join(" ")')
-          [[ -n $STALE_MANIFESTS ]] && doctl registry repository delete-manifest firecrew-app $STALE_MANIFESTS --force
-          echo Manifests removed: $STALE_MANIFESTS
