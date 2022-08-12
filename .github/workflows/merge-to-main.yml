@@ -24,6 +24,11 @@ jobs:
       - name: Log in to DigitalOcean Container Registry with short-lived credentials
         run: doctl registry login --expiry-seconds 1200
 
+      - name: Check for an active garbage collection process in the container registry
+        run: |
+          GC=$(doctl registry garbage-collection get-active --format UUID,RegistryName,Status --output json)
+          echo $GC
+
       - name: Cancel any active garbage collection in the container registry
         run: doctl registry garbage-collection cancel --verbose
 
