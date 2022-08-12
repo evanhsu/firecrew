@@ -15,7 +15,8 @@ jobs:
       # in the Container Registry (presumably put there by the 'merge-to-main.yml' workflow)
       - name: Get short-sha
         id: shortsha
-        run: echo "::set-output name=shortsha::$(echo $GITHUB_SHA | head -c7)"
+        # run: echo "::set-output name=shortsha::$(echo $GITHUB_SHA | head -c7)"
+        run: echo "::set-output name=shortsha::90958de"
 
       # Uses credentials from the evanhsu/AuthBot Github App (https://github.com/settings/installations/28169783)
       - id: deploy-pat
@@ -43,7 +44,17 @@ jobs:
           docker tag registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} registry.digitalocean.com/firecrew/firecrew-app:prod
           docker push registry.digitalocean.com/firecrew/firecrew-app:prod
 
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to DigitalOcean Container Registry with short-lived credentials
+        run: doctl registry login --expiry-seconds 1200
+
       - name: Delete unused images from container registry.
         run: |
-          TAGS=$(doctl registry repository lt firecrew/firecrew-app --format Tag,UpdatedAt | tail -n +2 | sort -rk2 | awk '{print firecrew/firecrew-app}' | grep -v latest | grep -v prod | tail -n +$2 | tr '\n' ' ')
-          echo $TAGS
+          ALL_MANIFESTS=$(doctl registry repository list-manifests firecrew-app --format Digest,Tags --output json)
+          STALE_MANIFESTS=$(echo $ALL_MANIFESTS | jq -c -r '. - map( select(.tags[] | contains("latest", "prod"))) | [.[].digest] | unique | join(" ")'
+          [[ -n $STALE_MANIFESTS ]] && doctl registry repository delete-manifest firecrew-app $STALE_MANIFESTS --force
+          echo Manifests removed: $STALE_MANIFESTS
