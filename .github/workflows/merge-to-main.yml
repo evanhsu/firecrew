@@ -37,7 +37,7 @@ jobs:
           echo "Found active garbage collection in progress: $GC"
 
       # The DigitalOcean container registry is read-only during garbage collection, which can last 15 minutes or so.
-      # We need to cancel the current garbage collection process so that we can push the image that we're about to build.
+      # We need to cancel the current garbage collection process so that we can push the image that we're about to build
       - name: Cancel any active garbage collection in the container registry
         if: steps.active-garbage-collection.outputs.uuid != ''
         run: doctl registry garbage-collection cancel ${{ steps.active-garbage-collection.outputs.uuid }}
