@@ -25,12 +25,14 @@ jobs:
         run: doctl registry login --expiry-seconds 1200
 
       - name: Check for an active garbage collection process in the container registry
+        id: active-garbage-collection
         run: |
           GC=$(doctl registry garbage-collection get-active --format UUID,RegistryName,Status --output json)
-          echo $GC
+          echo "::set-output name=uuid::$(echo $GC | jq -r '.[0].uuid')"
 
       - name: Cancel any active garbage collection in the container registry
-        run: doctl registry garbage-collection cancel --verbose
+        if: steps.active-garbage-collection.outputs.uuid != ""
+        run: doctl registry garbage-collection cancel {{ steps.active-garbage-collection.outputs.uuid }}
 
       - name: Get short-sha
         id: shortsha
