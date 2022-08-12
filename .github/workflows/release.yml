@@ -52,7 +52,12 @@ jobs:
       - name: Log in to DigitalOcean Container Registry with short-lived credentials
         run: doctl registry login --expiry-seconds 1200
 
+      - name: List images from container registry
+        run: |
+          TAGS=$(doctl registry repository lt firecrew-app --format Tag,UpdatedAt)
+          echo $TAGS
+
       - name: Delete unused images from container registry
         run: |
-          TAGS=$(doctl registry repository lt firecrew/firecrew-app --format Tag,UpdatedAt | tail -n +2 | sort -rk2 | awk '{print firecrew/firecrew-app}' | grep -v latest | grep -v prod | tail -n +$2 | tr '\n' ' ')
+          TAGS=$(doctl registry repository lt firecrew-app --format Tag,UpdatedAt | tail -n +2 | sort -rk2 | awk '{print firecrew-app}' | grep -v latest | grep -v prod | tail -n +$2 | tr '\n' ' ')
           echo $TAGS
