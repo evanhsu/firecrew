@@ -24,6 +24,9 @@ jobs:
       - name: Log in to DigitalOcean Container Registry with short-lived credentials
         run: doctl registry login --expiry-seconds 1200
 
+      - name: Cancel any active garbage collection in the container registry
+        run: doctl registry garbage-collection cancel
+
       - name: Get short-sha
         id: shortsha
         run: echo "::set-output name=shortsha::$(echo $GITHUB_SHA | head -c7)"
