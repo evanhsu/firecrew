@@ -44,6 +44,14 @@ jobs:
           docker tag registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} registry.digitalocean.com/firecrew/firecrew-app:prod
           docker push registry.digitalocean.com/firecrew/firecrew-app:prod
 
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to DigitalOcean Container Registry with short-lived credentials
+        run: doctl registry login --expiry-seconds 1200
+
       - name: Delete unused images from container registry
         run: |
           TAGS=$(doctl registry repository lt firecrew/firecrew-app --format Tag,UpdatedAt | tail -n +2 | sort -rk2 | awk '{print firecrew/firecrew-app}' | grep -v latest | grep -v prod | tail -n +$2 | tr '\n' ' ')
