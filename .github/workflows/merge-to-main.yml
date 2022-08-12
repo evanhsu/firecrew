@@ -61,4 +61,4 @@ jobs:
           echo Manifests removed: $STALE_MANIFESTS
 
       - name: Run garbage collection in the DigitalOcean Container Registry
-        run: doctl registry garbage-collection start --include-untagged-manifests
+        run: doctl registry garbage-collection start --include-untagged-manifests --force
