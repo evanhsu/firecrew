@@ -28,6 +28,8 @@ jobs:
       - name: Log in to DigitalOcean Container Registry with short-lived credentials
         run: doctl registry login --expiry-seconds 1200
 
+      # This step will exit with an error if there's no active garbage collection in progress.
+      # So we'll need to continue-on-error to handle that scenario.
       - name: Check for an active garbage collection process in the container registry
         id: active-garbage-collection
         continue-on-error: true
@@ -54,7 +56,7 @@ jobs:
           private_key: ${{ secrets.AUTHBOT_PRIVATE_KEY }}
 
       # Build a Docker image and tag it with the $GITHUB_SHA
-      # Also tag it with 'main' to denote that this image is built from the tip of the 'main' branch
+      # Also tag it with 'latest' to denote that this image is built from the tip of the 'main' branch
       - name: Build image
         run: docker build -t registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} -t registry.digitalocean.com/firecrew/firecrew-app:latest .
 
@@ -71,6 +73,7 @@ jobs:
           token: ${{ steps.deploy-pat.outputs.token }}
           inputs: '{ "app": "firecrew", "environment": "dev", "image": "firecrew/firecrew-app", "tag": "${{ steps.shortsha.outputs.shortsha }}"}'
 
+      # To save space in the container registry, we'll delete all images that DON'T have the "latest" or "prod" tags
       - name: Delete unused images from container registry
         run: |
           ALL_MANIFESTS=$(doctl registry repository list-manifests firecrew-app --format Digest,Tags --output json)
@@ -78,5 +81,7 @@ jobs:
           [[ -n $STALE_MANIFESTS ]] && doctl registry repository delete-manifest firecrew-app $STALE_MANIFESTS --force
           echo Manifests removed: $STALE_MANIFESTS
 
+      # The storage space isn't actually reclaimed until we run garbage collection in the container registry.
+      # This will put the registry into read-only mode for about 15 minutes while garbage collection completes.
       - name: Run garbage collection in the DigitalOcean Container Registry
         run: doctl registry garbage-collection start --include-untagged-manifests --force
