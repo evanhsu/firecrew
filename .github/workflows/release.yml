@@ -65,3 +65,13 @@ jobs:
           docker pull registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }}
           docker tag registry.digitalocean.com/firecrew/firecrew-app:${{ steps.shortsha.outputs.shortsha }} registry.digitalocean.com/firecrew/firecrew-app:prod
           docker push registry.digitalocean.com/firecrew/firecrew-app:prod
+
+      # Intentionally avoid deleting the recently-untagged image, just in case we want to roll back this deploy
+      # by re-deploying the previous image. But we'll still kick off a garbage collection process, just in case
+      # there was one in progress
+
+      # If we canceled a garbage-collection process at the beginning of this workflow, start a new process now.
+      # This will put the registry into read-only mode for about 15 minutes while garbage collection completes.
+      - name: Run garbage collection in the DigitalOcean Container Registry
+        if: steps.active-garbage-collection.outputs.uuid != ''
+        run: doctl registry garbage-collection start --include-untagged-manifests --force
