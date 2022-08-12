@@ -9,6 +9,10 @@ on:
       - "**.md"
       - "tests/**"
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   build-and-push-image-to-registry:
     name: Build image & deploy to dev
