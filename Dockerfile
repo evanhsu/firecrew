@@ -27,6 +27,10 @@ ENV APP_ENV production
 WORKDIR /app
 # Check the .dockerignore file for files that will be excluded
 COPY . .
+
+# Make the entrypoint.sh script executable
+RUN chmod a+x ./entrypoint.sh
+
 COPY ./.env.production ./.env
 # Overwrite the /public folder with output from the frontend build above
 COPY --from=frontend-build /app/public /app/public
@@ -72,4 +76,4 @@ EXPOSE 8080
 USER nobody
 
 # Does this override the desired behavior that the trafex/php-nginx image is intended to provide on container startup?
-ENTRYPOINT [ "entrypoint.sh" ]
+ENTRYPOINT [ "/var/www/html/entrypoint.sh" ]

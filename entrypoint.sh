@@ -1,9 +1,10 @@
-#! /bin/bash
+#!/bin/sh
 
+echo "Running database migrations..."
+php artisan migrate --force
 
-# Poll for a db connection
-
-# Once db availability is established, run migrations
-php artisan db:migrate --force
-
-# Or maybe we can just keep retrying the artisan migrate command until we get a clean exit?
+# Run the main container command
+# This is the startup command in the trafex/php-nginx docker image.
+# We replaced it with a custom entrypoint.sh script so that we could run migrations beforehand,
+# but now we want to let the php-nginx image startup like normal.
+/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
