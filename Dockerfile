@@ -70,3 +70,6 @@ RUN chown -R nobody:nobody .
 EXPOSE 8080
 
 USER nobody
+
+# Does this override the desired behavior that the trafex/php-nginx image is intended to provide on container startup?
+ENTRYPOINT [ "entrypoint.sh" ]
