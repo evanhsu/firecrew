@@ -1,8 +1,7 @@
 #!/bin/sh
 
 echo "Running database migrations..."
-php artisan migrate --force
-
+php artisan migrate --force && \
 # Run the main container command
 # This is the startup command in the trafex/php-nginx docker image.
 # We replaced it with a custom entrypoint.sh script so that we could run migrations beforehand,
