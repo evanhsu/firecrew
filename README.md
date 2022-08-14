@@ -122,7 +122,9 @@ Then you can open a terminal inside the app pod:
 Assuming you have a `.sql` backup file (e.g. from `mysqldump`),
 copy it to the kubernetes pod and run the `SqlDumpSeeder` to apply it to the db:
 
-    kubectl cp ./db_backup.sql <POD_NAME>:/var/www/html/
+(**Note** The seeder expects the db backup filename to be `firecrew.sql`)
+
+    kubectl cp ./db_backup.sql <POD_NAME>:/var/www/html/database/seeders/firecrew.sql
     kubectl exec -it <POD_NAME> -- /bin/sh
 
     /var/www/html $ php artisan db:seed --class=SqlDumpSeeder
