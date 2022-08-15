@@ -2,6 +2,9 @@
 
 return [
 
+    'hours_until_updates_go_stale' => 18,
+    'days_until_updates_expire' => 20,
+
     /*
     |--------------------------------------------------------------------------
     | Application Name
