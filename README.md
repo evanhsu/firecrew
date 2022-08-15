@@ -129,7 +129,18 @@ copy it to the kubernetes pod and run the `SqlDumpSeeder` to apply it to the db:
 
     /var/www/html $ php artisan db:seed --class=SqlDumpSeeder
 
-## Creating a db backup from the production server
+## Creating a db backup from the non-k8s server
 
+    (ssh into the prod server)
     sudo -iu firecrew
-    mysqldump --user=firecrew --databases firecrew --add-drop-table --comments --result-file=./db_backup.sql
+    mysqldump --user=firecrew --databases firecrew --add-drop-table --comments --result-file=./firecrew.sql
+
+    exit (return to your own ssh user)
+    cd ~
+    cp /home/firecrew/firecrew.sql ./firecrew.sql
+    exit (end the ssh session)
+
+    (copy the sql backup to your local machine)
+    scp firecrew.us:/home/evan/firecrew.sql ./
+
+    (Now you can follow the instructions above to Restore a db backup)
