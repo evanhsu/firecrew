@@ -5,7 +5,7 @@
 /public/js/vendor*.js
 /public/js/manifest*.js
 /public/css/app*.css
-/public/logos/
+#/public/logos/ Checking these into vcs as a hack so that we don't need block storage... which is gross and I hate it, buuuut....
 /storage/*.key
 /vendor
 .env
