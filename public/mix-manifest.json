@@ -1,4 +1,11 @@
 {
     "/js/app.js": "/js/app.js",
-    "/css/app.css": "/css/app.css"
+    "/js/index.js": "/js/index.js",
+    "/js/manifest.js": "/js/manifest.js",
+    "/css/app.css": "/css/app.css",
+    "/js/vendor.js": "/js/vendor.js",
+    "/js/FireResource.js": "/js/FireResource.js",
+    "/js/Helicopter.js": "/js/Helicopter.js",
+    "/js/ShortHaulFeatureLayer.js": "/js/ShortHaulFeatureLayer.js",
+    "/js/localmap.js": "/js/localmap.js"
 }

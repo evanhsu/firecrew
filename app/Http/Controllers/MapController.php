@@ -14,6 +14,13 @@ Class MapController extends Controller
         return view('map');
     } // End getMap()
 
+    public function getMap2(Request $request)
+    {
+        // The menubar will be selected by the MenubarComposer (app/Http/ViewComposers/MenubarComposer.php)
+        $request->session()->flash('active_menubutton', 'map'); // Tell the menubar which button to highlight
+        return view('map2');
+    }
+
     public function getMapJSON()
     {
         /**

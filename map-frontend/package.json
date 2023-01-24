@@ -1,0 +1,14 @@
+{
+    "name": "map-frontend",
+    "version": "1.0.0",
+    "description": "The ArcGIS map view",
+    "main": "src/index.js",
+    "license": "MIT",
+    "dependencies": {
+        "@arcgis/core": "^4.25.5",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "typescript": "^4.9.4"
+    },
+    "devDependencies": {}
+}

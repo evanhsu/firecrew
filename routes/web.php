@@ -20,6 +20,7 @@ Route::get('/', 'Status\SummaryController@index');
 
 Route::get('/summary', 'Status\SummaryController@index')->name('summary');
 Route::get('/map', 'MapController@getMap')->name('map');
+Route::get('/map2', 'MapController@getMap2')->name('map2');
 Route::get('/home', 'HomeController@index');
 Route::get('/privacy', 'PagesController@privacy');
 
