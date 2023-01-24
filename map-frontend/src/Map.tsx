@@ -13,14 +13,16 @@ function Map() {
              * Initialize application
              */
             const webmap = new WebMap({
-                portalItem: {
-                    id: "aa1d3f80270146208328cf66d022e09c",
-                },
+                basemap: "topo-vector",
+                // portalItem: {
+                //     id: "aa1d3f80270146208328cf66d022e09c",
+                // },
             });
 
             const view = new MapView({
                 container: mapDiv.current,
                 map: webmap,
+                center: [-113, 43],
             });
 
             const bookmarks = new Bookmarks({
@@ -36,20 +38,22 @@ function Map() {
             });
 
             // Add the widget to the top-right corner of the view
-            view.ui.add(bkExpand, "top-right");
+            // view.ui.add(bkExpand, "top-right");
 
             // bonus - how many bookmarks in the webmap?
-            webmap.when(() => {
-                if (webmap.bookmarks && webmap.bookmarks.length) {
-                    console.log("Bookmarks: ", webmap.bookmarks.length);
-                } else {
-                    console.log("No bookmarks in this webmap.");
-                }
-            });
+            webmap
+                .when(() => {
+                    // if (webmap.bookmarks && webmap.bookmarks.length) {
+                    //     console.log("Bookmarks: ", webmap.bookmarks.length);
+                    // } else {
+                    //     console.log("No bookmarks in this webmap.");
+                    // }
+                })
+                .then(() => console.log("Map has loaded"));
         }
     }, []);
 
-    return <div className="mapDiv" ref={mapDiv}></div>;
+    return <div id="map-container" ref={mapDiv}></div>;
 }
 
 export { Map };
