@@ -36,6 +36,19 @@ const freshTime = 18 * 60 * 60 * 1000; // Milliseconds until this helicopter's p
 const iconSize = 75;
 const iconPath = '/images/symbols'; // The folder that contains all of the map-symbol image files
 
+/**
+ * Creates 3 "Graphics" that can be used with the ArcGIS SDK. Each Graphic can be added to
+ * an ArcGIS map Layer.
+ *   1. A Graphic representing the Helicopter itself
+ *   2. A Graphic with a text label that will appear next to the Helicopter.
+ *   3. A Graphic with a circle that represents the Helicopter's maximum fuel range.
+ *
+ * @example
+ *   const h = new Helicopter({...});
+ *   helicopterLayer.addMany([h.mapGraphic, h.mapLabel]);
+ *   responseRingLayer.add(h.responseRingGraphic)
+ * @returns
+ */
 export const Helicopter = (props: HelicopterProps) => {
     const {
         resourceName,
@@ -59,6 +72,17 @@ export const Helicopter = (props: HelicopterProps) => {
     const isFresh = () => {
         var age = Date.now() - Date.parse(isoDate);
         return age < freshTime;
+    };
+
+    const objectId = (suffix: string = '') =>
+        `${resourceName}-${uuid}${suffix ? `-${suffix}` : ''}`;
+
+    const helicopterAttributes = {
+        OBJECTID: objectId(),
+        popupTitle: `Helicopter ${resourceName}`,
+        popupContent,
+        rangeNauticalMiles,
+        updatedAt: isoDate,
     };
 
     /**
@@ -89,10 +113,6 @@ export const Helicopter = (props: HelicopterProps) => {
             console.error('Error creating helicopter symbol: ' + e);
         }
     };
-
-    const objectId = (suffix: string = '') =>
-        `${resourceName}-${uuid}${suffix ? `-${suffix}` : ''}`;
-
     /**
      * Returns an ArcGIS GRAPHIC object that can be placed onto a GraphicsLayer.
      * The GRAPHIC object combines an ArcGIS POINT with a PICTUREMARKERSYMBOL to produce an image with a location.
@@ -101,19 +121,13 @@ export const Helicopter = (props: HelicopterProps) => {
      * @example:
      * 	const myHelicopter = new Helicopter();
      * 	const gl = new GraphicsLayer();
-     *	gl.add(myHelicopter.mapGraphic());
+     *	gl.add(myHelicopter.mapGraphic);
      */
-    const mapGraphic = () => {
+    const helicopterGraphic = () => {
         return new Graphic({
             geometry: mapPoint(),
             symbol: helictoperSymbol(),
-            attributes: {
-                OBJECTID: objectId(),
-                popupTitle: `Helicopter ${resourceName}`,
-                popupContent,
-                rangeNauticalMiles,
-                updatedAt: isoDate,
-            },
+            attributes: helicopterAttributes,
             popupTemplate: {
                 title: '{popupTitle}',
                 content: [
@@ -128,7 +142,7 @@ export const Helicopter = (props: HelicopterProps) => {
     /**
      * The text label that will appear next to this Helicopter's graphic symbol on the map.
      */
-    const mapLabel = () => {
+    const helicopterLabelGraphic = () => {
         const colorValue = isFresh() ? '#000000' : '#888888';
         return new Graphic({
             geometry: mapPoint(),
@@ -191,9 +205,32 @@ export const Helicopter = (props: HelicopterProps) => {
         });
     };
 
+    const responseRingGraphicLabel = () => {
+        const colorValue = isFresh() ? '#000000' : '#888888';
+        return new Graphic({
+            geometry: mapPoint(),
+            attributes: {
+                OBJECTID: objectId('response-ring-label'),
+            },
+            symbol: new TextSymbol({
+                text: `Range: ${rangeNauticalMiles.toFixed(0)} NM`,
+                color: new Color(colorValue),
+                xoffset: 50,
+                yoffset: 50,
+                font: new Font({
+                    size: 20,
+                    family: 'sans-serif',
+                    weight: 'bolder',
+                }),
+            }),
+            visible: false, // The ring (and label) are hidden by default. They become visible when the heli icon is clicked.
+        });
+    };
+
     return {
-        mapLabel: mapLabel(),
-        mapGraphic: mapGraphic(),
+        helicopterLabel: helicopterLabelGraphic(),
+        helicopterGraphic: helicopterGraphic(),
         responseRingGraphic: responseRingGraphic(),
+        responseRingGraphicLabel: responseRingGraphicLabel(),
     };
 };

@@ -59,7 +59,7 @@ const Map = () => {
                 longitude: position.longitude,
                 updatedAt: '2023-01-30 21:30:00',
                 popupContent: '<span style="color: blue">hi there</span>',
-            }).mapGraphic,
+            }).helicopterGraphic,
         ],
         objectIdField: 'OBJECTID',
         fields: [
@@ -123,16 +123,17 @@ const Map = () => {
                 //     addFeatures: [h.mapGraphic, h.responseRingGraphic],
                 // });
                 layer<GraphicsLayer>('helicopter-graphics-layer').addMany([
-                    h.mapGraphic,
-                    h.mapLabel,
+                    h.helicopterGraphic,
+                    h.helicopterLabel,
                 ]);
-                layer<GraphicsLayer>('response-ring-graphics-layer').add(
-                    h.responseRingGraphic
-                );
+                layer<GraphicsLayer>('response-ring-graphics-layer').addMany([
+                    h.responseRingGraphic,
+                    h.responseRingGraphicLabel,
+                ]);
             } catch (e) {
                 console.error(e);
             }
-        }, 5000);
+        }, 10000);
 
         return () => {
             clearInterval(timer);
@@ -160,25 +161,10 @@ const Map = () => {
                 zoom: 6,
             });
 
-            const bookmarks = new Bookmarks({
-                view,
-                // allows bookmarks to be added, edited, or deleted
-                editingEnabled: true,
-            });
-
-            const bkExpand = new Expand({
-                view,
-                content: bookmarks,
-                expanded: true,
-            });
-
             webmap.add(stateBoundariesLayer);
             webmap.add(helicopterGraphicsLayer);
             webmap.add(responseRingGraphicsLayer);
-            webmap.add(helicopterPositionFeatureLayer);
-
-            // Add the widget to the top-right corner of the view
-            // view.ui.add(bkExpand, "top-right");
+            // webmap.add(helicopterPositionFeatureLayer);
 
             view.on('click', function (event) {
                 // the hitTest() checks to see if any graphics in the view
@@ -211,12 +197,15 @@ const Map = () => {
                             )}`
                         );
                         const responseRingObjectId = `${hit.graphic.attributes['OBJECTID']}-response-ring`;
+                        const responseRingLabelObjectId = `${hit.graphic.attributes['OBJECTID']}-response-ring-label`;
                         // const layer = hit.graphic.layer as GraphicsLayer;
                         const layer = responseRingGraphicsLayer;
+
                         layer.graphics.forEach((graphic) => {
-                            graphic.visible =
-                                graphic.getAttribute('OBJECTID') ===
-                                responseRingObjectId;
+                            graphic.visible = [
+                                responseRingObjectId,
+                                responseRingLabelObjectId,
+                            ].includes(graphic.getAttribute('OBJECTID'));
                         });
                         layer.visible = true;
                         // do something with the graphic
@@ -240,14 +229,18 @@ const Map = () => {
     }, []);
 
     return (
-        <div>
+        <div style={{ height: '100%' }}>
             <button
                 onClick={toggleLayerIsVisible}
                 style={{ width: 100, height: 40 }}
             >
                 Toggle
             </button>
-            <div id="map-container" ref={mapDiv}></div>
+            <div
+                id="map-container"
+                style={{ height: '100%' }}
+                ref={mapDiv}
+            ></div>
         </div>
     );
 };

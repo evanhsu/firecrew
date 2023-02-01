@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Domain\Crews\Crew;
 use App\Domain\Statuses\ResourceStatus;
+use Illuminate\Support\Facades\Log;
+
 
 class ResourceStatusController extends Controller
 {
@@ -52,6 +54,9 @@ class ResourceStatusController extends Controller
         $resourceClass = "App\Domain\StatusableResources\\" . $request->get('statusable_resource_type');
         $resource = $resourceClass::where('identifier', $identifier)->first();
         $crew = Crew::find($crewId);
+
+        Log::info("Updating status for resource $identifier of Crew $crew->name");
+        
 
         // Make sure current user is authorized
         if(Auth::user()->cannot('act-as-admin-for-crew', $crewId)) {

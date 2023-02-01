@@ -1,11 +1,15 @@
 {
     "/js/app.js": "/js/app.js",
-    "/js/index.js": "/js/index.js",
-    "/js/manifest.js": "/js/manifest.js",
     "/css/app.css": "/css/app.css",
-    "/js/vendor.js": "/js/vendor.js",
     "/js/FireResource.js": "/js/FireResource.js",
     "/js/Helicopter.js": "/js/Helicopter.js",
     "/js/ShortHaulFeatureLayer.js": "/js/ShortHaulFeatureLayer.js",
-    "/js/localmap.js": "/js/localmap.js"
+    "/js/localmap.js": "/js/localmap.js",
+    "/js/map/asset-manifest.json": "/js/map/asset-manifest.json",
+    "/js/map/favicon.ico": "/js/map/favicon.ico",
+    "/js/map/index.html": "/js/map/index.html",
+    "/js/map/logo192.png": "/js/map/logo192.png",
+    "/js/map/logo512.png": "/js/map/logo512.png",
+    "/js/map/manifest.json": "/js/map/manifest.json",
+    "/js/map/robots.txt": "/js/map/robots.txt"
 }

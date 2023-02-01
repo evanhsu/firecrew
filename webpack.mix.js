@@ -1,14 +1,11 @@
-const mix = require("laravel-mix");
+const mix = require('laravel-mix');
 
 /*
  |--------------------------------------------------------------------------
  | Mix Asset Management
  |--------------------------------------------------------------------------
- |
- | Mix provides a clean, fluent API for defining some Webpack build steps
- | for your Laravel applications. By default, we are compiling the CSS
- | file for the application as well as bundling up all the JS files.
- |
+ | https://laravel-mix.com
+ | This is a wrapper around Webpack that ships with Laravel
  */
 
 /*
@@ -16,31 +13,32 @@ const mix = require("laravel-mix");
  * There's also some unfinished work on an Inventory system here.
  * This React App uses the top-level package.json
  */
-mix.js("resources/js/app.js", "public/js")
-    .sass("resources/sass/app.scss", "public/css")
+mix.js('resources/js/app.js', 'js')
+    .sass('resources/sass/app.scss', 'css')
     .react();
 
 /*
  * The files in the static folder don't require any transpilation or bundling.
  * They should just be copied as-is into the public folder.
  */
-mix.copy("resources/js/static/", "public/js");
+mix.copy('resources/js/static/', 'public/js');
 
 /*
  * The map-frontend is a Typescript React project.
  * It's built outside the main project in the map-frontend folder.
  * It uses its own package.json file so that it can use newer packages without
  * having to update the entire legacy project.
+ * You need to build the map-frontend separately (via `yarn build` in the map-frontend/ folder)
+ * and then this step just copies the bundle into the Laravel public folder.
  */
-mix.override((webpackConfig) => {
-    webpackConfig.module.rules.push({
-        test: /\.m?js/,
-        resolve: {
-            fullySpecified: false,
-        },
-    });
-});
-mix.setPublicPath("public/")
-    .ts("map-frontend/src/index.tsx", "/js")
-    .react()
-    .extract();
+mix.copy('map-frontend/build/', 'public/js/map');
+
+// mix.override((webpackConfig) => {
+//     webpackConfig.module.rules.push({
+//         test: /\.m?js/,
+//         resolve: {
+//             fullySpecified: false,
+//         },
+//     });
+// });
+// mix.ts('map-frontend/src/index.tsx', 'js/map').react().extract();
