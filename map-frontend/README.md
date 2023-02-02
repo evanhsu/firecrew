@@ -1,46 +1,38 @@
-# Getting Started with Create React App
+# The Map
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The map view is built as a completely separate react project so that it can use a
+newer version of NodeJS, React, and the ArcGIS SDK without needing to upgrade the
+entire rest of the legacy frontend (which still uses React 15 at the time of this
+writing).
 
-## Available Scripts
+## Production Build
 
-In the project directory, you can run:
+In the `/map-frontend` folder:
 
-### `yarn start`
+    yarn build
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+this will create a `bundle.js` in the `map-frontend/dist/` folder.
+But we're not done yet. This bundle needs to be moved into the Laravel
+project so that it can be bundled into the Laravel build:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+The Laravel webpack config will copy the 'map-frontend' bundle into Laravel
+project when it runs
 
-### `yarn test`
+From the root project folder, run:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+    yarn prod
 
-### `yarn build`
+This will build the legacy frontend (Summary page + Inventory stuff) and also copy the
+`map-frontend/dist/` folder into the Laravel project.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Dev Workflow
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. In the `/map-frontend` folder, run
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+    npx webpack --watch
 
-### `yarn eject`
+2. In the project root, run
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+    yarn watch
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+It's clunky, but it works for now.

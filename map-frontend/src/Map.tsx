@@ -236,11 +236,7 @@ const Map = () => {
             >
                 Toggle
             </button>
-            <div
-                id="map-container"
-                style={{ height: '100%' }}
-                ref={mapDiv}
-            ></div>
+            <div id="map-container" ref={mapDiv}></div>
         </div>
     );
 };

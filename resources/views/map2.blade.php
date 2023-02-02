@@ -13,7 +13,5 @@
 @endsection
 
 @section('scripts-postload')
-    <script src="{{ mix('/js/map/manifest.js') }}"></script>
-    <script src="{{ mix('/js/map/vendor.js') }}"></script>
-    <script src="{{ mix('/js/map/index.js') }}"></script>
+    <script src="{{ mix('/js/map/bundle.js') }}"></script>
 @endsection

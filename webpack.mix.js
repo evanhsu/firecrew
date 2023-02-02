@@ -31,7 +31,7 @@ mix.copy('resources/js/static/', 'public/js');
  * You need to build the map-frontend separately (via `yarn build` in the map-frontend/ folder)
  * and then this step just copies the bundle into the Laravel public folder.
  */
-mix.copy('map-frontend/build/', 'public/js/map');
+mix.copy('map-frontend/dist/', 'public/js/map');
 
 // mix.override((webpackConfig) => {
 //     webpackConfig.module.rules.push({
