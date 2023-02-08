@@ -1,22 +1,79 @@
-import React, { useRef, useEffect, useState } from 'react';
-import Bookmarks from '@arcgis/core/widgets/Bookmarks';
-import Expand from '@arcgis/core/widgets/Expand';
-import MapView from '@arcgis/core/views/MapView';
-import WebMap from '@arcgis/core/WebMap';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
+import MapView from '@arcgis/core/views/MapView';
+import WebMap from '@arcgis/core/WebMap';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helicopter } from './Helicopter';
-import { TextContent } from '@arcgis/core/popup/content';
+import { OnDataCallback, useHelicopterData } from './hooks/useHelicopterData';
 
-const getPosition = () => {
-    const latitude = 43.0 + Math.random() * 5;
-    const longitude = -113.0 + Math.random() * 5;
-
-    return {
-        latitude,
-        longitude,
-    };
+export type InputHelicopter = {
+    id: number;
+    latitude: number;
+    longitude: number;
+    tailnumber: string;
+    makeModel: '205A1' | '412EPX' | 'SuperPuma';
+    popupContent: string;
 };
+
+/**
+ * Get a layer (by its ID) from a WebMap
+ */
+const layer = <T extends __esri.Layer = __esri.Layer>(
+    layerId: string,
+    map: WebMap | null
+): T => {
+    if (map) {
+        const layer = map.allLayers.find((layer) => layer.id === layerId);
+        if (layer) {
+            // @ts-expect-error
+            return layer;
+        }
+        throw new Error(`Map layer "${layerId}" doesn't exist`);
+    } else {
+        throw new Error("The map hasn't finished loading yet");
+    }
+};
+
+const createHelicopterDataHandler: (webMap: WebMap | null) => OnDataCallback =
+    (webMap) => async (helicopters) => {
+        console.log('Clearing all graphics from helicopter-graphics-layer');
+        layer<GraphicsLayer>('helicopter-graphics-layer', webMap).removeAll();
+
+        console.log('Clearing all graphics from response-ring-graphics-layer');
+        layer<GraphicsLayer>(
+            'response-ring-graphics-layer',
+            webMap
+        ).removeAll();
+
+        helicopters.forEach((inputHelicopter) => {
+            const h = Helicopter({
+                tailnumber: inputHelicopter.tailnumber,
+                makeModel: inputHelicopter.makeModel,
+                latitude: inputHelicopter.latitude,
+                longitude: inputHelicopter.longitude,
+                updatedAt: '2023-01-30 21:30:00',
+                popupContent: inputHelicopter.popupContent,
+            });
+            try {
+                // layer<FeatureLayer>('helicopter-layer').applyEdits({
+                //     addFeatures: [h.mapGraphic, h.responseRingGraphic],
+                // });
+                console.log(
+                    `adding helicopter ${inputHelicopter.tailnumber} to graphics layer`
+                );
+                layer<GraphicsLayer>(
+                    'helicopter-graphics-layer',
+                    webMap
+                ).addMany([h.helicopterGraphic, h.helicopterLabel]);
+                layer<GraphicsLayer>(
+                    'response-ring-graphics-layer',
+                    webMap
+                ).addMany([h.responseRingGraphic, h.responseRingGraphicLabel]);
+            } catch (e) {
+                console.error(e);
+            }
+        });
+    };
 
 const Map = () => {
     const mapDiv = useRef<HTMLDivElement>(null);
@@ -25,9 +82,19 @@ const Map = () => {
     // and rendering this component twice results in duplicate maps and layers in the dom.
     const esriMapAlreadyLoaded = useRef(false);
 
-    const [position, setPosition] = useState(getPosition());
+    // const [position, setPosition] = useState();
     const [isVisible, setIsVisible] = useState(false);
     const [webMap, setWebMap] = useState<WebMap | null>(null);
+
+    const handleHelicopterUpdatedEvent = useCallback(
+        createHelicopterDataHandler(webMap),
+        [webMap]
+    );
+
+    let { fetchAndSubscribe } = useHelicopterData(
+        handleHelicopterUpdatedEvent,
+        webMap
+    );
 
     const stateBoundariesLayer = new FeatureLayer({
         id: 'census-layer',
@@ -42,103 +109,58 @@ const Map = () => {
         id: 'response-ring-graphics-layer',
     });
 
-    const helicopterPositionFeatureLayer = new FeatureLayer({
-        id: 'helicopter-layer',
-        popupTemplate: {
-            title: '{popupTitle}',
-            content: [
-                new TextContent({
-                    text: '{popupContent}',
-                }),
-            ],
-        },
-        source: [
-            Helicopter({
-                resourceName: 'N000999',
-                latitude: position.latitude,
-                longitude: position.longitude,
-                updatedAt: '2023-01-30 21:30:00',
-                popupContent: '<span style="color: blue">hi there</span>',
-            }).helicopterGraphic,
-        ],
-        objectIdField: 'OBJECTID',
-        fields: [
-            {
-                name: 'OBJECTID',
-                type: 'oid',
-            },
-            {
-                name: 'popupTitle',
-                type: 'string',
-            },
-            {
-                name: 'popupContent',
-                type: 'xml',
-            },
-        ],
-    });
+    // Using a "FeatureLayer" is more complex than using a "GraphicsLayer" (like we're currently doing)
+    // but has some additional capabilities. This example isn't fully functional, but I'm leaving it
+    // here as a starting point if I ever decide to switch to a FeatureLayer.
+    // const helicopterPositionFeatureLayer = new FeatureLayer({
+    //     id: 'helicopter-layer',
+    //     popupTemplate: {
+    //         title: '{popupTitle}',
+    //         content: [
+    //             new TextContent({
+    //                 text: '{popupContent}',
+    //             }),
+    //         ],
+    //     },
+    //     source: [
+    //         Helicopter({
+    //             resourceName: 'N000999',
+    //             latitude: position.latitude,
+    //             longitude: position.longitude,
+    //             updatedAt: '2023-01-30 21:30:00',
+    //             popupContent: '<span style="color: blue">hi there</span>',
+    //         }).helicopterGraphic,
+    //     ],
+    //     objectIdField: 'OBJECTID',
+    //     fields: [
+    //         {
+    //             name: 'OBJECTID',
+    //             type: 'oid',
+    //         },
+    //         {
+    //             name: 'popupTitle',
+    //             type: 'string',
+    //         },
+    //         {
+    //             name: 'popupContent',
+    //             type: 'xml',
+    //         },
+    //     ],
+    // });
 
-    const layer = <T extends __esri.Layer = __esri.Layer>(
-        layerId: string
-    ): T => {
-        if (webMap) {
-            const layer = webMap.allLayers.find(
-                (layer) => layer.id === layerId
-            );
-            if (layer) {
-                // @ts-expect-error
-                return layer;
-            }
-            throw new Error(`Map layer "${layerId}" doesn't exist`);
-        } else {
-            throw new Error("The map hasn't finished loading yet");
-        }
-    };
+    useEffect(() => {
+        fetchAndSubscribe();
+    }, [fetchAndSubscribe]);
 
     const toggleLayerIsVisible = () => {
         setIsVisible(!isVisible);
         console.debug(`toggling layer visibility to ${isVisible}`);
         try {
-            layer('census-layer').visible = isVisible;
+            layer('census-layer', webMap).visible = isVisible;
         } catch (e) {
             console.error(e);
         }
     };
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setPosition(getPosition());
-
-            const h = Helicopter({
-                resourceName: 'N12345',
-                latitude: position.latitude,
-                longitude: position.longitude,
-                updatedAt: '2023-01-30 21:30:00',
-                popupContent: '<span style="color: blue">hi there</span>',
-                rangeNauticalMiles: Math.random() * 100 + 100,
-            });
-
-            try {
-                // layer<FeatureLayer>('helicopter-layer').applyEdits({
-                //     addFeatures: [h.mapGraphic, h.responseRingGraphic],
-                // });
-                layer<GraphicsLayer>('helicopter-graphics-layer').addMany([
-                    h.helicopterGraphic,
-                    h.helicopterLabel,
-                ]);
-                layer<GraphicsLayer>('response-ring-graphics-layer').addMany([
-                    h.responseRingGraphic,
-                    h.responseRingGraphicLabel,
-                ]);
-            } catch (e) {
-                console.error(e);
-            }
-        }, 10000);
-
-        return () => {
-            clearInterval(timer);
-        };
-    });
 
     useEffect(() => {
         if (!esriMapAlreadyLoaded.current) {
@@ -146,7 +168,8 @@ const Map = () => {
             /**
              * Initialize application
              */
-            const webmap = new WebMap({
+            console.log('Creating the WebMap...');
+            const map = new WebMap({
                 basemap: 'topo-vector',
                 // portalItem: {
                 //     id: "aa1d3f80270146208328cf66d022e09c",
@@ -156,14 +179,14 @@ const Map = () => {
             const view = new MapView({
                 // @ts-expect-error
                 container: mapDiv.current,
-                map: webmap,
+                map: map,
                 center: [-113, 43],
                 zoom: 6,
             });
 
-            webmap.add(stateBoundariesLayer);
-            webmap.add(helicopterGraphicsLayer);
-            webmap.add(responseRingGraphicsLayer);
+            map.add(stateBoundariesLayer);
+            map.add(helicopterGraphicsLayer);
+            map.add(responseRingGraphicsLayer);
             // webmap.add(helicopterPositionFeatureLayer);
 
             view.on('click', function (event) {
@@ -183,8 +206,11 @@ const Map = () => {
 
                     // If we clicked away from all helicopters, hide all response rings
                     if (graphicHits.length === 0) {
-                        const layer = responseRingGraphicsLayer;
-                        layer.visible = false;
+                        // Make the entire responseRing layer invisible (hide all rings)
+                        // const layer = responseRingGraphicsLayer;
+                        // layer.visible = false;
+                        //
+                        // Alternative: make each response ring invisible
                         // layer.graphics.forEach((graphic) => {
                         //     graphic.visible = false;
                         // });
@@ -192,9 +218,7 @@ const Map = () => {
 
                     graphicHits.forEach((hit) => {
                         console.log(
-                            `Clicked on ${JSON.stringify(
-                                hit.graphic.attributes
-                            )}`
+                            `Clicked on ${hit.graphic.attributes.OBJECTID}`
                         );
                         const responseRingObjectId = `${hit.graphic.attributes['OBJECTID']}-response-ring`;
                         const responseRingLabelObjectId = `${hit.graphic.attributes['OBJECTID']}-response-ring-label`;
@@ -205,7 +229,9 @@ const Map = () => {
                             graphic.visible = [
                                 responseRingObjectId,
                                 responseRingLabelObjectId,
-                            ].includes(graphic.getAttribute('OBJECTID'));
+                            ].includes(graphic.getAttribute('OBJECTID'))
+                                ? !graphic.visible // Toggle the visibility if this graphic was clicked
+                                : graphic.visible; // Leave the visibility unchanged if this graphic was NOT clicked
                         });
                         layer.visible = true;
                         // do something with the graphic
@@ -213,29 +239,28 @@ const Map = () => {
                 });
             });
 
-            webmap
-                .when(() => {
-                    // if (webmap.bookmarks && webmap.bookmarks.length) {
-                    //     console.log("Bookmarks: ", webmap.bookmarks.length);
-                    // } else {
-                    //     console.log("No bookmarks in this webmap.");
-                    // }
-                })
-                .then(() => {
-                    setWebMap(webmap);
-                    console.log('Map has loaded');
-                });
+            map.when(() => {
+                // if (webmap.bookmarks && webmap.bookmarks.length) {
+                //     console.log("Bookmarks: ", webmap.bookmarks.length);
+                // } else {
+                //     console.log("No bookmarks in this webmap.");
+                // }
+
+                // The map is now loaded
+                console.log(`The Map is loaded: ${map.loaded}`);
+                setWebMap(map);
+            });
         }
     }, []);
 
     return (
         <div style={{ height: '100%' }}>
-            <button
+            {/* <button
                 onClick={toggleLayerIsVisible}
                 style={{ width: 100, height: 40 }}
             >
                 Toggle
-            </button>
+            </button> */}
             <div id="map-container" ref={mapDiv}></div>
         </div>
     );

@@ -11,15 +11,31 @@ import {
 } from '@arcgis/core/symbols';
 import { TextContent } from '@arcgis/core/popup/content';
 
+export const helicopterMakeModelAttributes = {
+    '205A1': {
+        model: '205 A1++',
+        rangeStatuteMiles: 130,
+    },
+    '412EPX': {
+        model: '412 EPX',
+        rangeStatuteMiles: 254,
+    },
+    SuperPuma: {
+        model: '332L1',
+        rangeStatuteMiles: 334,
+    },
+};
+export type HelicopterMakeModel = keyof typeof helicopterMakeModelAttributes;
+
 export type HelicopterProps = {
     /**
      * The human-readable name for this helicopter. Usually a tailnumber
      * @example N208RH
      */
-    resourceName: string;
+    tailnumber: string;
     latitude: number;
     longitude: number;
-    rangeNauticalMiles?: number;
+    makeModel: HelicopterMakeModel;
     /**
      * Formatted HTML that will be rendered in a popup when this Helicopter symbol is clicked
      */
@@ -28,7 +44,6 @@ export type HelicopterProps = {
 };
 
 const defaultProps = {
-    rangeNauticalMiles: 100,
     popupContent: null,
 };
 
@@ -51,12 +66,14 @@ const iconPath = '/images/symbols'; // The folder that contains all of the map-s
  */
 export const Helicopter = (props: HelicopterProps) => {
     const {
-        resourceName,
+        tailnumber: resourceName,
         latitude,
         longitude,
-        rangeNauticalMiles,
+        makeModel,
         popupContent,
     } = { ...defaultProps, ...props };
+    const rangeStatuteMiles =
+        helicopterMakeModelAttributes[makeModel].rangeStatuteMiles;
     const isoDate = props.updatedAt.replace(/-/g, '/') + ' GMT'; // Convert date string from YYYY-mm-dd HH:mm:ss to YYYY/mm/dd HH:mm:ss
 
     // This uuid will be used to uniquely identify this helicopter
@@ -81,7 +98,7 @@ export const Helicopter = (props: HelicopterProps) => {
         OBJECTID: objectId(),
         popupTitle: `Helicopter ${resourceName}`,
         popupContent,
-        rangeNauticalMiles,
+        rangeStatuteMiles,
         updatedAt: isoDate,
     };
 
@@ -99,7 +116,7 @@ export const Helicopter = (props: HelicopterProps) => {
         });
     };
 
-    const helictoperSymbol = () => {
+    const helicopterSymbol = () => {
         const filename = `${iconPath}/rappelhelicopter-${
             isFresh() ? 'fresh' : 'stale'
         }.png`;
@@ -126,7 +143,7 @@ export const Helicopter = (props: HelicopterProps) => {
     const helicopterGraphic = () => {
         return new Graphic({
             geometry: mapPoint(),
-            symbol: helictoperSymbol(),
+            symbol: helicopterSymbol(),
             attributes: helicopterAttributes,
             popupTemplate: {
                 title: '{popupTitle}',
@@ -171,7 +188,7 @@ export const Helicopter = (props: HelicopterProps) => {
 
         // Choose a color for the Response Ring based on whether the helicopter location data is FRESH or STALE
         const freshColor =
-            rangeNauticalMiles > 150 ? bigRingColor : smallRingColor;
+            rangeStatuteMiles > 150 ? bigRingColor : smallRingColor;
         const staleColor = new Color([150, 150, 150]);
 
         const responseRingSymbol = new SimpleFillSymbol({
@@ -189,8 +206,8 @@ export const Helicopter = (props: HelicopterProps) => {
 
         const circle = new Circle({
             center: mapPoint(),
-            radius: rangeNauticalMiles,
-            radiusUnit: 'nautical-miles',
+            radius: rangeStatuteMiles,
+            radiusUnit: 'miles',
             numberOfPoints: 120,
             geodesic: true,
         });
@@ -213,7 +230,7 @@ export const Helicopter = (props: HelicopterProps) => {
                 OBJECTID: objectId('response-ring-label'),
             },
             symbol: new TextSymbol({
-                text: `Range: ${rangeNauticalMiles.toFixed(0)} NM`,
+                text: `Range: ${rangeStatuteMiles.toFixed(0)} mi`,
                 color: new Color(colorValue),
                 xoffset: 50,
                 yoffset: 50,

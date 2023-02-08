@@ -35,4 +35,6 @@ This will build the legacy frontend (Summary page + Inventory stuff) and also co
 
     yarn watch
 
+3. You can visit in-browser at http://firecrew.test
+
 It's clunky, but it works for now.
