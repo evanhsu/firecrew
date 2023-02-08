@@ -25,6 +25,8 @@ export const useHelicopterData = (
     // Using a ref instead of a useState() hook because the value needs to be accessible to a
     // Javascript event handler that's registered on the window (outside of React).
     // See the window.Echo.channel().listen() event handler that's registered in this hook.
+    // Initially built this using [helicopterData, setHelicopterData] = useState([]) but the event
+    // handler always saw an empty collection, even after the state had been updated.
     const helicopterData = useRef<InputHelicopter[]>([]);
     const setHelicopterData = (helicopters: InputHelicopter[]) => {
         helicopterData.current = helicopters;
