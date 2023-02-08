@@ -5,6 +5,7 @@ import WebMap from '@arcgis/core/WebMap';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helicopter } from './Helicopter';
 import { OnDataCallback, useHelicopterData } from './hooks/useHelicopterData';
+import { logger } from './utils/Logger';
 
 export type InputHelicopter = {
     id: number;
@@ -36,10 +37,10 @@ const layer = <T extends __esri.Layer = __esri.Layer>(
 
 const createHelicopterDataHandler: (webMap: WebMap | null) => OnDataCallback =
     (webMap) => async (helicopters) => {
-        console.log('Clearing all graphics from helicopter-graphics-layer');
+        logger.debug('Clearing all graphics from helicopter-graphics-layer');
         layer<GraphicsLayer>('helicopter-graphics-layer', webMap).removeAll();
 
-        console.log('Clearing all graphics from response-ring-graphics-layer');
+        logger.debug('Clearing all graphics from response-ring-graphics-layer');
         layer<GraphicsLayer>(
             'response-ring-graphics-layer',
             webMap
@@ -58,7 +59,7 @@ const createHelicopterDataHandler: (webMap: WebMap | null) => OnDataCallback =
                 // layer<FeatureLayer>('helicopter-layer').applyEdits({
                 //     addFeatures: [h.mapGraphic, h.responseRingGraphic],
                 // });
-                console.log(
+                logger.debug(
                     `adding helicopter ${inputHelicopter.tailnumber} to graphics layer`
                 );
                 layer<GraphicsLayer>(
@@ -168,7 +169,8 @@ const Map = () => {
             /**
              * Initialize application
              */
-            console.log('Creating the WebMap...');
+            logger.debug('Creating the WebMap...');
+
             const map = new WebMap({
                 basemap: 'topo-vector',
                 // portalItem: {
@@ -217,7 +219,7 @@ const Map = () => {
                     }
 
                     graphicHits.forEach((hit) => {
-                        console.log(
+                        logger.debug(
                             `Clicked on ${hit.graphic.attributes.OBJECTID}`
                         );
                         const responseRingObjectId = `${hit.graphic.attributes['OBJECTID']}-response-ring`;
@@ -241,13 +243,13 @@ const Map = () => {
 
             map.when(() => {
                 // if (webmap.bookmarks && webmap.bookmarks.length) {
-                //     console.log("Bookmarks: ", webmap.bookmarks.length);
+                //     logger.debug("Bookmarks: ", webmap.bookmarks.length);
                 // } else {
-                //     console.log("No bookmarks in this webmap.");
+                //     logger.debug("No bookmarks in this webmap.");
                 // }
 
                 // The map is now loaded
-                console.log(`The Map is loaded: ${map.loaded}`);
+                logger.debug(`The Map is loaded: ${map.loaded}`);
                 setWebMap(map);
             });
         }

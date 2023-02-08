@@ -1,6 +1,7 @@
 import WebMap from '@arcgis/core/WebMap';
 import { useCallback, useRef } from 'react';
 import { InputHelicopter } from '../Map';
+import { logger } from '../utils/Logger';
 
 const translateHelicopterFromApiSchemaToAppSchema = (
     apiHelicopter: any
@@ -36,7 +37,7 @@ export const useHelicopterData = (
         const updatedHelicopter = translateHelicopterFromApiSchemaToAppSchema(
             event.resourceStatus
         );
-        console.log(
+        logger.debug(
             `Received status update event for resource ${updatedHelicopter.id}`
         );
 
@@ -44,11 +45,11 @@ export const useHelicopterData = (
 
         // Merge new update with existing data
         if (helicopters.length === 0) {
-            console.log('Adding helicopter to empty collection');
+            logger.debug('Adding helicopter to empty collection');
             helicopters.push(updatedHelicopter);
             setHelicopterData(helicopters);
         } else {
-            console.log('Merging helicopter into existing collection');
+            logger.debug('Merging helicopter into existing collection');
 
             const unchangedHelicopters = helicopters.filter((h) => {
                 // Remove the helicopter that was updated (keep the others)
@@ -89,7 +90,7 @@ export const useHelicopterData = (
                     window.Echo?.channel !== undefined &&
                     !eventListenersAreRegistered.current
                 ) {
-                    console.log('Registering Echo event listener');
+                    logger.debug('Registering Echo event listener');
                     // @ts-expect-error
                     window.Echo.channel('publicStatusUpdates').listen(
                         'ResourceStatusUpdated',
