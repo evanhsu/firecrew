@@ -1,20 +1,25 @@
 FROM node:16-bullseye AS frontend-build
-WORKDIR /app
-
-# Install dependencies for the Laravel javascript frontend
-COPY ./package.json ./package.json
-COPY ./yarn.lock ./yarn.lock
-RUN ["yarn", "install"]
 
 # Install dependencies for the standalone Map view javascript frontend
-COPY ./map-frontend/package.json ./map-frontend/package.json
-COPY ./map-frontend/yarn.lock ./map-frontend/yarn.lock
+WORKDIR /app/map-frontend
+COPY ./map-frontend/package.json ./package.json
+COPY ./map-frontend/yarn.lock ./yarn.lock
 RUN ["yarn", "install"]
 
 # Build the map-frontend first - the "Laravel Mix" config in the
 # next step will copy the bundled output from this build to the /public folder
-COPY ./map-frontend ./map-frontend
+COPY ./map-frontend ./
 RUN ["yarn", "build"]
+
+# Docker layer caching isn't optimal here because we build the entire map frontend
+# before installing dependencies for the "Laravel frontend". If the map-frontend is
+# changed at all, we'll need to rebuild the entire Laravel frontend as well.
+
+# Install dependencies for the Laravel javascript frontend
+WORKDIR /app
+COPY ./package.json ./package.json
+COPY ./yarn.lock ./yarn.lock
+RUN ["yarn", "install"]
 
 # Build the Laravel js frontend. The Mix config also includes a step to move
 # the other js frontend (map-frontend) to the public folder alongside the bundle
