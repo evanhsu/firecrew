@@ -1,17 +1,29 @@
 FROM node:16-bullseye AS frontend-build
 WORKDIR /app
 
+# Install dependencies for the Laravel javascript frontend
 COPY ./package.json ./package.json
 COPY ./yarn.lock ./yarn.lock
 RUN ["yarn", "install"]
 
-# Only copy files required for the frontend build (all code should be in the /resources folder)
+# Install dependencies for the standalone Map view javascript frontend
+COPY ./map-frontend/package.json ./map-frontend/package.json
+COPY ./map-frontend/yarn.lock ./map-frontend/yarn.lock
+RUN ["yarn", "install"]
+
+# Build the map-frontend first - the "Laravel Mix" config in the
+# next step will copy the bundled output from this build to the /public folder
+COPY ./map-frontend ./map-frontend
+RUN ["yarn", "build"]
+
+# Build the Laravel js frontend. The Mix config also includes a step to move
+# the other js frontend (map-frontend) to the public folder alongside the bundle
+# that's built during this step.
 COPY ./webpack.mix.js ./webpack.mix.js
 COPY ./resources ./resources
 COPY ./.env.production ./.env
 # This writes output files to the /public folder (/public/js, /public/fonts, etc)
 RUN ["yarn", "production"]
-
 
 
 # The webdevops image has all the php extensions + composer installed
