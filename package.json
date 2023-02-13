@@ -11,15 +11,19 @@
     },
     "devDependencies": {
         "@babel/preset-react": "^7.14.5",
+        "@types/react": "^18.0.27",
         "axios": "^0.21",
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.21",
         "postcss": "^8.1.14",
+        "prettier": "^2.8.3",
         "prop-types": "^15.7.2",
         "react-immutable-proptypes": "^2.2.0",
         "resolve-url-loader": "^4.0.0",
         "sass": "^1.35.2",
-        "sass-loader": "^12.1.0"
+        "sass-loader": "^12.1.0",
+        "ts-loader": "^9.4.2",
+        "typescript": "^4.9.4"
     },
     "dependencies": {
         "bootstrap-sass": "3",

@@ -37,6 +37,12 @@ class Aircraft extends Model
         return static::class;
     }
 
+    public static $models = [
+        '205a1' => '205 A1',
+        '412epx' => '412 EPX',
+        'superpuma' => 'Super Puma',
+    ];
+
     /**
      * Define relationships to other Eloquent models
      *

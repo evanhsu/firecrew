@@ -9,7 +9,7 @@ use App\Domain\StatusableResources\AbstractStatusableResource;
  * @param $crew
  * @param bool $template If TRUE, this function will draw the blank template for an Aircraft Form rather than a populated form.
  */
-function drawOneAircraftForm($index, $aircraft, $crew, $template = false) {
+function drawOneAircraftForm($index, $aircraft, $crew, $aircraft_models, $template = false) {
 
     if($template) {
         $aircraft = new App\Domain\StatusableResources\AbstractStatusableResource(array("identifier"=>"","model"=>""));
@@ -46,20 +46,31 @@ function drawOneAircraftForm($index, $aircraft, $crew, $template = false) {
         <div class=\"form-group\">
             <label for=\"aircraft-model\" class=\"control-label col-sm-2\">Make/Model</label>
             <div class=\"col-sm-4 col-md-3\">
-                <input type=\"text\" class=\"form-control aircraft-model\" name=\"crew[statusableResources][".$index."][model]\" value=\"".$aircraft->model."\" />
+                <!-- <input type=\"text\" class=\"form-control aircraft-model\" name=\"crew[statusableResources][".$index."][model]\" value=\"".$aircraft->model."\" /> -->
+                <select class=\"form-control aircraft-type\" name=\"crew[statusableResources][".$index."][model]\">\n";
+    
+    foreach($aircraft_models as $modelKey => $modelText) {
+        $output .= "<option value=\"".$modelKey."\"";
+        
+        if ($aircraft->model === $modelKey) {
+            $output .= " selected=\"selected\"";
+        }
+
+        $output .= ">".$modelText."</option>\n";
+    }
+
+    $output .= "</select>
             </div>
         </div>
 
         <div class=\"form-group\">
             <label for=\"aircraft-type\" class=\"control-label col-sm-2\">Usage</label>
+            <a role=\"button\" class=\"control-label-helper\" tabindex=\"0\" data-toggle=\"popover\" title=\"What type of missions is this aircraft used for?\" data-trigger=\"focus\" data-content=\"Only Rappel aircraft are currently supported\">
+                <span class=\"glyphicon glyphicon-question-sign\"></span>
+            </a>
             <div class=\"col-sm-4 col-md-3\">
-                <select class=\"form-control aircraft-type\" name=\"crew[statusableResources][".$index."][resource_type]\">
-                    <option value=\"RappelHelicopter\"".($aircraft->resource_type == "RappelHelicopter" ? " selected" : ""). ">Rappel</option>
-                    <option value=\"HelitackHelicopter\"".($aircraft->resource_type == "HelitackHelicopter" ? " selected" : ""). ">Helitack</option>
-                    <option value=\"Type1Helicopter\"".($aircraft->resource_type == "Type1Helicopter" ? " selected" : ""). ">Type 1 Helicopter</option>
-                    <option value=\"ShortHaulHelicopter\"".($aircraft->resource_type == "ShortHaulHelicopter" ? " selected" : ""). ">Short Haul</option>
-                    <option value=\"SmokejumperAirplane\"".($aircraft->resource_type == "SmokejumperAirplane" ? " selected" : ""). ">Smokejumper</option>
-                </select>
+                <input type=\"text\"  class=\"form-control\" name=\"crew[statusableResources][".$index."][resource_type]\" value=\"Rappel\" disabled=true />
+                <input type=\"hidden\" class=\"form-control\" name=\"crew[statusableResources][".$index."][resource_type]\" value=\"RappelHelicopter\" readonly=true />
             </div>
         </div>\n";
 
@@ -253,7 +264,7 @@ function freshnessNotify($freshness) {
             </div>
             <?php $i = 0; ?>
             @foreach($crew->statusableResources as $aircraft)
-                <?php drawOneAircraftForm($i, $aircraft, $crew); ?>
+                <?php drawOneAircraftForm($i, $aircraft, $crew, $aircraft_models); ?>
                 <?php $i++; ?>
             @endforeach
 
@@ -269,7 +280,7 @@ function freshnessNotify($freshness) {
 
 
 @if($show_aircraft)
-        <?php drawOneAircraftForm(null, null, $crew, true); ?>
+        <?php drawOneAircraftForm(null, null, $crew, $aircraft_models, true); ?>
 
         <div id="aircraft-index" style="display:none;">{{ $i }}</div>
 @endif

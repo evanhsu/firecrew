@@ -1,7 +1,7 @@
 @extends('../layouts.app')
 
 
-@section('title','Aircraft - RescueCircle')
+@section('page-title','Aircraft - FireCrew')
 
 
 @section('content')
@@ -35,7 +35,7 @@
                         <tr>
                             <td>{{ $a->id }}</td>
                             <td>{{ $a->identifier}}</td>
-                            <td>{{ $a->model }}</td>
+                            <td>{{ $aircraft_models[$a->model] }}</td>
                             <td id="crew-name-cell">
                                 @if(!empty($a->crew_id))
                                     <a href="{{ route('edit_crew', array('crewId' => $a->crew_id)) }}">{{ $a->crew->name }}</a>

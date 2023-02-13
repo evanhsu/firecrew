@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Domain\Crews\Crew;
 use App\Domain\Statuses\ResourceStatus;
+use Illuminate\Support\Facades\Log;
+use DateTime;
 
 class ResourceStatusController extends Controller
 {
@@ -30,13 +32,22 @@ class ResourceStatusController extends Controller
                             $join->on('newer.updated_at','>','newest.updated_at');
                             })
                         ->join('statusable_resources', 'statusable_resources.id', '=', 'newest.statusable_resource_id')
-                        ->select('newest.*', 'statusable_resources.crew_id')
+                        ->select('newest.*', 'statusable_resources.crew_id', 'statusable_resources.model')
                         ->whereNotNull('statusable_resources.crew_id')
                         ->whereNull('newer.updated_at')
                         ->where('newest.updated_at','>=',$earliest_date)
                         ->get();
 
-        return json_encode($resources);
+        return (collect($resources))->map(function ($resource) {
+            // Format the updated_at date as ISO8601
+            $resource->updated_at = (new DateTime($resource->updated_at))->format(DateTime::ATOM);
+            
+            // Move the 'model' property into a nested property named 'resource' to match 
+            // the ResourceStatusUpdated event schema. This way, the same frontend logic can be
+            // used to handle the API response and events.
+            $resource->resource = ['model' => $resource->model];
+            return $resource;
+        });
     }
 
     /**
@@ -52,6 +63,9 @@ class ResourceStatusController extends Controller
         $resourceClass = "App\Domain\StatusableResources\\" . $request->get('statusable_resource_type');
         $resource = $resourceClass::where('identifier', $identifier)->first();
         $crew = Crew::find($crewId);
+
+        Log::info("Updating status for resource $identifier of Crew $crew->name");
+        
 
         // Make sure current user is authorized
         if(Auth::user()->cannot('act-as-admin-for-crew', $crewId)) {
