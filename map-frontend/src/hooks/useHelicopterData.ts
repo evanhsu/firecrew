@@ -1,22 +1,29 @@
 import WebMap from '@arcgis/core/WebMap';
 import { useCallback, useRef } from 'react';
-import { InputHelicopter } from '../Map';
+import { HelicopterProps } from '../Helicopter';
 import { logger } from '../utils/Logger';
 
 const translateHelicopterFromApiSchemaToAppSchema = (
     apiHelicopter: any
-): InputHelicopter => {
+): HelicopterProps => {
     return {
         id: apiHelicopter.statusable_resource_id,
         latitude: apiHelicopter.latitude,
         longitude: apiHelicopter.longitude,
         tailnumber: apiHelicopter.statusable_resource_name,
-        makeModel: '205A1',
+        makeModel: apiHelicopter.resource?.model,
         popupContent: apiHelicopter.popup_content,
+        staffingCategory1: apiHelicopter.staffing_category1,
+        staffingValue1: apiHelicopter.staffing_value1,
+        crewName: apiHelicopter.crew_name,
+        managerName: apiHelicopter.manager_name,
+        managerPhone: apiHelicopter.manager_phone,
+        assignedFireName: apiHelicopter.assigned_fire_name,
+        updatedAt: new Date(apiHelicopter.updated_at),
     };
 };
 
-export type OnDataCallback = (data: InputHelicopter[]) => Promise<void>;
+export type OnDataCallback = (data: HelicopterProps[]) => Promise<void>;
 export const useHelicopterData = (
     onData: OnDataCallback,
     webMap: WebMap | null
@@ -28,18 +35,20 @@ export const useHelicopterData = (
     // See the window.Echo.channel().listen() event handler that's registered in this hook.
     // Initially built this using [helicopterData, setHelicopterData] = useState([]) but the event
     // handler always saw an empty collection, even after the state had been updated.
-    const helicopterData = useRef<InputHelicopter[]>([]);
-    const setHelicopterData = (helicopters: InputHelicopter[]) => {
+    const helicopterData = useRef<HelicopterProps[]>([]);
+    const setHelicopterData = (helicopters: HelicopterProps[]) => {
         helicopterData.current = helicopters;
     };
 
     const onEventReceived = (event: any) => {
+        console.log(JSON.stringify(event));
         const updatedHelicopter = translateHelicopterFromApiSchemaToAppSchema(
             event.resourceStatus
         );
         logger.debug(
             `Received status update event for resource ${updatedHelicopter.id}`
         );
+        console.log(JSON.stringify(event));
 
         let helicopters = helicopterData.current;
 

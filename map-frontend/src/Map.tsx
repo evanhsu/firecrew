@@ -7,15 +7,6 @@ import { Helicopter } from './Helicopter';
 import { OnDataCallback, useHelicopterData } from './hooks/useHelicopterData';
 import { logger } from './utils/Logger';
 
-export type InputHelicopter = {
-    id: number;
-    latitude: number;
-    longitude: number;
-    tailnumber: string;
-    makeModel: '205A1' | '412EPX' | 'SuperPuma';
-    popupContent: string;
-};
-
 /**
  * Get a layer (by its ID) from a WebMap
  */
@@ -48,13 +39,21 @@ const createHelicopterDataHandler: (webMap: WebMap | null) => OnDataCallback =
 
         helicopters.forEach((inputHelicopter) => {
             const h = Helicopter({
+                id: inputHelicopter.id,
                 tailnumber: inputHelicopter.tailnumber,
                 makeModel: inputHelicopter.makeModel,
                 latitude: inputHelicopter.latitude,
                 longitude: inputHelicopter.longitude,
-                updatedAt: '2023-01-30 21:30:00',
+                updatedAt: inputHelicopter.updatedAt,
                 popupContent: inputHelicopter.popupContent,
+                staffingCategory1: inputHelicopter.staffingCategory1,
+                staffingValue1: inputHelicopter.staffingValue1,
+                crewName: inputHelicopter.crewName,
+                assignedFireName: inputHelicopter.assignedFireName,
+                managerName: inputHelicopter.managerName,
+                managerPhone: inputHelicopter.managerPhone,
             });
+
             try {
                 // layer<FeatureLayer>('helicopter-layer').applyEdits({
                 //     addFeatures: [h.mapGraphic, h.responseRingGraphic],

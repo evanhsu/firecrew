@@ -12,7 +12,7 @@ use Carbon\Carbon;
 use App\Domain\Crews\Crew;
 use App\Domain\Statuses\ResourceStatus;
 use Illuminate\Support\Facades\Log;
-
+use DateTime;
 
 class ResourceStatusController extends Controller
 {
@@ -32,13 +32,22 @@ class ResourceStatusController extends Controller
                             $join->on('newer.updated_at','>','newest.updated_at');
                             })
                         ->join('statusable_resources', 'statusable_resources.id', '=', 'newest.statusable_resource_id')
-                        ->select('newest.*', 'statusable_resources.crew_id')
+                        ->select('newest.*', 'statusable_resources.crew_id', 'statusable_resources.model')
                         ->whereNotNull('statusable_resources.crew_id')
                         ->whereNull('newer.updated_at')
                         ->where('newest.updated_at','>=',$earliest_date)
                         ->get();
 
-        return json_encode($resources);
+        return (collect($resources))->map(function ($resource) {
+            // Format the updated_at date as ISO8601
+            $resource->updated_at = (new DateTime($resource->updated_at))->format(DateTime::ATOM);
+            
+            // Move the 'model' property into a nested property named 'resource' to match 
+            // the ResourceStatusUpdated event schema. This way, the same frontend logic can be
+            // used to handle the API response and events.
+            $resource->resource = ['model' => $resource->model];
+            return $resource;
+        });
     }
 
     /**

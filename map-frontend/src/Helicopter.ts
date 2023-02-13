@@ -9,18 +9,17 @@ import {
     TextSymbol,
     Font,
 } from '@arcgis/core/symbols';
-import { TextContent } from '@arcgis/core/popup/content';
 
 export const helicopterMakeModelAttributes = {
-    '205A1': {
+    '205a1': {
         model: '205 A1++',
         rangeStatuteMiles: 130,
     },
-    '412EPX': {
+    '412epx': {
         model: '412 EPX',
         rangeStatuteMiles: 254,
     },
-    SuperPuma: {
+    superpuma: {
         model: '332L1',
         rangeStatuteMiles: 334,
     },
@@ -28,6 +27,10 @@ export const helicopterMakeModelAttributes = {
 export type HelicopterMakeModel = keyof typeof helicopterMakeModelAttributes;
 
 export type HelicopterProps = {
+    /**
+     * The 'statusable_resource_id' from the API
+     */
+    id: string;
     /**
      * The human-readable name for this helicopter. Usually a tailnumber
      * @example N208RH
@@ -40,11 +43,21 @@ export type HelicopterProps = {
      * Formatted HTML that will be rendered in a popup when this Helicopter symbol is clicked
      */
     popupContent?: string;
-    updatedAt: string;
+    staffingCategory1: string; // HRAPs Available
+    staffingValue1: string | number;
+    crewName: string;
+    managerName: string;
+    managerPhone: string;
+    assignedFireName: string;
+    updatedAt: Date;
 };
 
 const defaultProps = {
     popupContent: null,
+    crewName: '',
+    managerName: '',
+    managerPhone: '',
+    assignedFireName: '',
 };
 
 const freshTime = 18 * 60 * 60 * 1000; // Milliseconds until this helicopter's position info is considered stale
@@ -71,10 +84,16 @@ export const Helicopter = (props: HelicopterProps) => {
         longitude,
         makeModel,
         popupContent,
+        staffingCategory1,
+        staffingValue1,
+        crewName,
+        managerName,
+        managerPhone,
+        assignedFireName,
+        updatedAt,
     } = { ...defaultProps, ...props };
     const rangeStatuteMiles =
-        helicopterMakeModelAttributes[makeModel].rangeStatuteMiles;
-    const isoDate = props.updatedAt.replace(/-/g, '/') + ' GMT'; // Convert date string from YYYY-mm-dd HH:mm:ss to YYYY/mm/dd HH:mm:ss
+        helicopterMakeModelAttributes[makeModel]?.rangeStatuteMiles ?? 0;
 
     // This uuid will be used to uniquely identify this helicopter
     // and associate it with its related "response ring", map label, and other related Graphics.
@@ -87,7 +106,7 @@ export const Helicopter = (props: HelicopterProps) => {
      * If the database entry for this helicopter's location has been updated within the past 18hr, return TRUE.
      */
     const isFresh = () => {
-        var age = Date.now() - Date.parse(isoDate);
+        var age = Date.now() - updatedAt.getTime();
         return age < freshTime;
     };
 
@@ -99,7 +118,13 @@ export const Helicopter = (props: HelicopterProps) => {
         popupTitle: `Helicopter ${resourceName}`,
         popupContent,
         rangeStatuteMiles,
-        updatedAt: isoDate,
+        updatedAt,
+        staffingCategory1,
+        staffingValue1,
+        assignedFireName,
+        managerName,
+        managerPhone,
+        crewName,
     };
 
     /**
@@ -148,9 +173,40 @@ export const Helicopter = (props: HelicopterProps) => {
             popupTemplate: {
                 title: '{popupTitle}',
                 content: [
-                    new TextContent({
-                        text: '{popupContent}',
-                    }),
+                    {
+                        type: 'fields',
+                        fieldInfos: [
+                            {
+                                fieldName: 'crewName',
+                                label: 'Crew',
+                            },
+                            {
+                                fieldName: 'assignedFireName',
+                                label: 'Assigned Fire',
+                            },
+                            {
+                                fieldName: 'staffingValue1',
+                                label: helicopterAttributes.staffingCategory1,
+                            },
+                            {
+                                fieldName: 'managerName',
+                                label: 'Spotter',
+                            },
+                            {
+                                fieldName: 'managerPhone',
+                                label: 'Phone',
+                            },
+                            {
+                                fieldName: 'rangeStatuteMiles',
+                                label: 'Range (mi)',
+                            },
+                            {
+                                fieldName: 'updatedAt',
+                                label: 'Updated',
+                                type: 'date',
+                            },
+                        ],
+                    },
                 ],
             },
         });
