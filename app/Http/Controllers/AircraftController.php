@@ -31,9 +31,10 @@ class AircraftController extends Controller
     {
         //
         $aircrafts = AbstractStatusableResource::orderBy('identifier', 'asc')->get();
+        $aircraft_models = Aircraft::$models;
 
         $request->session()->flash('active_menubutton', 'aircraft'); // Tell the menubar which button to highlight
-        return view('aircrafts.index')->with('aircrafts', $aircrafts);
+        return view('aircrafts.index')->with('aircrafts', $aircrafts)->with('aircraft_models', $aircraft_models);
     }
 
 

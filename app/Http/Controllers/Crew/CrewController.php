@@ -10,6 +10,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\MessageBag;
+use Illuminate\Support\Facades\Log;
 
 
 /**
@@ -110,8 +111,9 @@ class CrewController extends Controller
 
         // Decide whether to show the Aircraft section of the Edit Crew form:
         $show_aircraft = true; //$crew->is_an_aircraft_crew();
+        $aircraft_models = Aircraft::$models;
 
-        return view('crews.edit')->with('crew', $crew)->with('show_aircraft', $show_aircraft);
+        return view('crews.edit')->with('crew', $crew)->with('show_aircraft', $show_aircraft)->with('aircraft_models', $aircraft_models);
 //        $errors = new MessageBag(['Crew' => ['That Crew doesn\'t exist.']]);
 //        return redirect()->route('not_found')->withErrors($errors);
     }
