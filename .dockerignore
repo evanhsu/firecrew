@@ -2,7 +2,11 @@
 .env
 .git*
 docker
+map-frontend/node_modules
+map-frontend/node_modules/dist
 node_modules
+public/js/*
+public/css/*
 storage/logs/*
 storage/framework/sessions/*
 storage/framework/testing/*

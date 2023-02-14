@@ -8,7 +8,7 @@ RUN ["yarn", "install"]
 
 # Build the map-frontend first - the "Laravel Mix" config in the
 # next step will copy the bundled output from this build to the /public folder
-COPY ./map-frontend ./
+COPY ./map-frontend .
 RUN ["yarn", "build"]
 
 # Docker layer caching isn't optimal here because we build the entire map frontend

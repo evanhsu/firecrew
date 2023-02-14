@@ -13,15 +13,16 @@ const mix = require('laravel-mix');
  * There's also some unfinished work on an Inventory system here.
  * This React App uses the top-level package.json
  */
-mix.js('resources/js/app.js', 'js')
-    .sass('resources/sass/app.scss', 'css')
+mix.js('resources/js/app.js', 'public/js')
+    .sass('resources/sass/app.scss', 'public/css')
     .react();
 
 /*
  * The files in the static folder don't require any transpilation or bundling.
  * They should just be copied as-is into the public folder.
+ * These files were all part of the original esri map view which is no longer used.
  */
-mix.copy('resources/js/static/', 'public/js');
+// mix.copy('resources/js/static/', 'public/js');
 
 /*
  * The map-frontend is a Typescript React project.
