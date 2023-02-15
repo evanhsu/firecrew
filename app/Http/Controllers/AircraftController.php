@@ -32,9 +32,15 @@ class AircraftController extends Controller
         //
         $aircrafts = AbstractStatusableResource::orderBy('identifier', 'asc')->get();
         $aircraft_models = Aircraft::$models;
+        
+        // Filter out old aircraft that have unsupported ->model properties
+        // It's likely that there are "orphaned" aircraft in the db that exist but won't show up.
+        $supported_aircrafts = collect($aircrafts)->filter(function($aircraft, $i) use ($aircraft_models) {
+            return array_key_exists($aircraft->model, $aircraft_models);
+        });
 
         $request->session()->flash('active_menubutton', 'aircraft'); // Tell the menubar which button to highlight
-        return view('aircrafts.index')->with('aircrafts', $aircrafts)->with('aircraft_models', $aircraft_models);
+        return view('aircrafts.index')->with('aircrafts', $supported_aircrafts)->with('aircraft_models', $aircraft_models);
     }
 
 
