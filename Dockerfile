@@ -51,7 +51,7 @@ RUN chmod a+x ./entrypoint.sh
 COPY ./.env.production ./.env
 # Overwrite the /public folder with output from the frontend build above
 COPY --from=frontend-build /app/public /app/public
-COPY --from=frontend-build /app/mix-manifest.json /app/public/mix-manifest.json
+# COPY --from=frontend-build /app/public/mix-manifest.json /app/public/mix-manifest.json
 
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
