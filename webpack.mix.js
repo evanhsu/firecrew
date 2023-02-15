@@ -13,9 +13,9 @@ const mix = require('laravel-mix');
  * There's also some unfinished work on an Inventory system here.
  * This React App uses the top-level package.json
  */
-mix.js('resources/js/app.js', 'public/js')
-    .sass('resources/sass/app.scss', 'public/css')
-    .setPublicPath('public')
+mix.setPublicPath('public')
+    .js('resources/js/app.js', 'js')
+    .sass('resources/sass/app.scss', 'css')
     .react();
 
 /*
