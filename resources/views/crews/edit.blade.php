@@ -46,7 +46,6 @@ function drawOneAircraftForm($index, $aircraft, $crew, $aircraft_models, $templa
         <div class=\"form-group\">
             <label for=\"aircraft-model\" class=\"control-label col-sm-2\">Make/Model</label>
             <div class=\"col-sm-4 col-md-3\">
-                <!-- <input type=\"text\" class=\"form-control aircraft-model\" name=\"crew[statusableResources][".$index."][model]\" value=\"".$aircraft->model."\" /> -->
                 <select class=\"form-control aircraft-type\" name=\"crew[statusableResources][".$index."][model]\">\n";
     
     foreach($aircraft_models as $modelKey => $modelText) {
