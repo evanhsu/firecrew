@@ -198,7 +198,7 @@ export const Helicopter = (props: HelicopterProps) => {
                             },
                             {
                                 fieldName: 'rangeStatuteMiles',
-                                label: 'Range (mi)',
+                                label: 'IA Range (mi)',
                             },
                             {
                                 fieldName: 'updatedAt',
@@ -286,7 +286,7 @@ export const Helicopter = (props: HelicopterProps) => {
                 OBJECTID: objectId('response-ring-label'),
             },
             symbol: new TextSymbol({
-                text: `Range: ${rangeStatuteMiles.toFixed(0)} mi`,
+                text: `IA Range: ${rangeStatuteMiles.toFixed(0)} mi`,
                 color: new Color(colorValue),
                 xoffset: 50,
                 yoffset: 50,
