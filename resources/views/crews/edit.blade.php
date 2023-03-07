@@ -218,7 +218,7 @@ function freshnessNotify($freshness) {
                 </div>
             </div>
 
-            <h3>Home Dispatch Center</h3>
+            <!-- <h3>Home Dispatch Center</h3>
 
             <div class="form-group">
                 <label for="dispatch_center_name" class="col-xs-12 col-sm-2 control-label">Name</label>
@@ -250,7 +250,7 @@ function freshnessNotify($freshness) {
                 <div class="col-xs-12 col-sm-6">
                     <input type="tel" id="dispatch_center_24_hour_phone" name="crew[dispatch_center_24_hour_phone]" value="{{ $crew->dispatch_center_24_hour_phone}}" class="form-control" />
                 </div>
-            </div>
+            </div> -->
 
 @if($show_aircraft)
             

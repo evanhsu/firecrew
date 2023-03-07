@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    <div class="row">
+    <!-- <div class="row">
         <h2>Crew Intel</h2>
         <div class="form-group">
             <label for="intel" class="control-label sr-only">Crew Intel</label>
@@ -39,15 +39,15 @@
                           rows="4">{{ $status->intel }}</textarea>
             </div>
         </div>
-    </div>
+    </div> -->
 
-    <div class="row">
+    <!-- <div class="row">
         <h2>Personnel Assignments</h2>
     </div>
 
     @for ($i = 1; $i <= 6; $i++)
         @include('status_forms/_fields_for_personnel_assignment')
-    @endfor
+    @endfor -->
 
     <div class="col-xs-12">
         <div class="form-group">
