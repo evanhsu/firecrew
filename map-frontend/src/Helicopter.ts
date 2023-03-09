@@ -61,7 +61,7 @@ const defaultProps = {
 };
 
 const freshTime = 18 * 60 * 60 * 1000; // Milliseconds until this helicopter's position info is considered stale
-const iconSize = 75;
+const iconSize = 65;
 const iconPath = '/images/symbols'; // The folder that contains all of the map-symbol image files
 
 /**
