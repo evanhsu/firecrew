@@ -7,17 +7,40 @@ import DutyOfficer from './DutyOfficer';
 import * as styles from './styles';
 import Timestamp from './Timestamp';
 
+const formatHelicopterModelForDisplay = (resource) => {
+    const identifier = resource.get('identifier').toUpperCase();
+    let model = '';
+
+    switch (resource.get('model').toLowerCase()) {
+        case '412epx':
+            model = 'Bell 412EPX';
+            break;
+
+        case '205a1':
+            model = 'Bell 205A1++';
+            break;
+
+        case 'superpuma':
+            model = 'AS 332L1';
+            break;
+    }
+
+    return `${identifier} (${model})`;
+};
+
 const HeaderRow = () => (
     <thead>
         <tr>
             <th className="col-xs-2">Crew</th>
-            <th className="col-xs-7">
-                <span className="col-xs-2">HRAPS Available</span>
-                <span className="col-xs-3">Resource</span>
-                <span className="col-xs-3">Location</span>
-                <span className="col-xs-4">Notes</span>
+            <th className="col-xs-10">
+                <span className="col-xs-1">Available Rappellers</span>
+                <span className="col-xs-2">Helicopter</span>
+                <span className="col-xs-1">Location</span>
+                <span className="col-xs-2">Current Assignment</span>
+                <span className="col-xs-2">Spotter</span>
+                <span className="col-xs-2">Staffed Incidents</span>
+                <span className="col-xs-2">Additional Info</span>
             </th>
-            <th className="col-xs-3">Intel</th>
         </tr>
     </thead>
 );
@@ -32,12 +55,18 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
                 <Timestamp timestamp={crewRow.get('updated_at')} />
             </td>
             <td className="col-xs-7 row" style={crewRowStyle.resourceCell}>
-                {crewRow.get('statusable_resources').map((resource) => (
-                    <CrewResourceRow
-                        key={resource.get('id')}
-                        resource={resource}
-                    />
-                ))}
+                {crewRow.get('statusable_resources').map((resource, index) => {
+                    return (
+                        <CrewResourceRow
+                            key={resource.get('id')}
+                            resource={resource}
+                            isLastRow={
+                                crewRow.get('statusable_resources').size - 1 ===
+                                index
+                            }
+                        />
+                    );
+                })}
                 {[
                     'personnel_1_',
                     'personnel_2_',
@@ -66,9 +95,12 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
                     {isSelected ? <ExtraInfoRow key="extra-row" crew={crewRow} isSelected={isSelected}/> : null}
                 </ReactCSSTransitionGroup> */}
             </td>
-            <td className="col-xs-3" style={crewRowStyle.intelCell}>
+
+            {/* This column is now populated by the CrewResourceRow
+             <td className="col-xs-3" style={crewRowStyle.intelCell}>
                 {crewRow.getIn(['status', 'intel'])}
             </td>
+            */}
         </tr>
     );
 };
@@ -92,28 +124,48 @@ const staffingValues = (resource) => {
     return '';
 };
 
-const CrewResourceRow = ({ resource }) => (
-    <span className="row" style={styles.getCrewResourceRowStyle()}>
-        <span className="col-xs-2">{staffingValues(resource)}</span>
-        <span className="col-xs-3">
-            {resource.get('identifier')} ({resource.get('model')})
+const StaffedIncidentList = ({ whitespaceDelimitedString }) => {
+    if (!whitespaceDelimitedString) {
+        return null;
+    }
+    const withHtmlBreaks = whitespaceDelimitedString.replace(/\s+/, `<br />`);
+    return <span dangerouslySetInnerHTML={{ __html: withHtmlBreaks }}></span>;
+};
+
+const CrewResourceRow = ({ resource, isLastRow = false }) => {
+    return (
+        <span className="row" style={styles.getCrewResourceRowStyle(isLastRow)}>
+            <span className="col-xs-1">{staffingValues(resource)}</span>
+            <span className="col-xs-2">
+                {formatHelicopterModelForDisplay(resource)}
+            </span>
+            <span className="col-xs-1">
+                {resource.getIn(['latest_status', 'location_name'])}
+            </span>
+            <span className="col-xs-2">
+                {resource.getIn(['latest_status', 'assigned_fire_name'])}
+            </span>
+            <span className="col-xs-2">
+                {resource.getIn(['latest_status', 'manager_name']) &&
+                    `${resource.getIn(['latest_status', 'manager_name'])}`}
+                {resource.getIn(['latest_status', 'manager_phone']) &&
+                    ` (${resource.getIn(['latest_status', 'manager_phone'])})`}
+            </span>
+            <span className="col-xs-2">
+                <StaffedIncidentList
+                    whitespaceDelimitedString={resource.getIn([
+                        'latest_status',
+                        'comments1',
+                    ])}
+                />
+            </span>
+            <span className="col-xs-2">
+                {resource.getIn(['latest_status', 'comments2']) &&
+                    resource.getIn(['latest_status', 'comments2'])}
+            </span>
         </span>
-        <span className="col-xs-3">
-            {resource.getIn(['latest_status', 'location_name'])}
-        </span>
-        <span className="col-xs-4">
-            {resource.getIn(['latest_status', 'manager_name']) &&
-                `Contact: ${resource.getIn(['latest_status', 'manager_name'])}`}
-            {resource.getIn(['latest_status', 'manager_phone']) &&
-                ` (${resource.getIn(['latest_status', 'manager_phone'])})`}
-            <br />
-            {resource.getIn(['latest_status', 'comments1']) &&
-                `${resource.getIn(['latest_status', 'comments1'])}`}
-            <br />
-            {resource.getIn(['latest_status', 'comments2'])}
-        </span>
-    </span>
-);
+    );
+};
 
 CrewResourceRow.propTypes = {
     resource: ImmutablePropTypes.map,
