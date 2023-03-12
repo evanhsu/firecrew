@@ -75,7 +75,10 @@ const createHelicopterDataHandler: (webMap: WebMap | null) => OnDataCallback =
         });
     };
 
-const Map = () => {
+export type MapProps = {
+    isDrawerOpen: boolean;
+};
+const Map = ({ isDrawerOpen }: MapProps) => {
     const mapDiv = useRef<HTMLDivElement>(null);
     // This ref is used to guarantee that the WebMap isn't built twice.
     // Since the WebMap is bound to a DOM element with userRef(), it persists between re-renders
@@ -254,15 +257,20 @@ const Map = () => {
         }
     }, []);
 
+    const height = isDrawerOpen ? 'calc(100vh - 251px)' : 'calc(100vh - 51px)'; // 51px is the height of the top nav
     return (
-        <div style={{ height: '100%' }}>
+        <div style={{ height }}>
             {/* <button
                 onClick={toggleLayerIsVisible}
                 style={{ width: 100, height: 40 }}
             >
                 Toggle
             </button> */}
-            <div id="map-container" ref={mapDiv}></div>
+            <div
+                id="map-container"
+                style={{ height: '100%' }}
+                ref={mapDiv}
+            ></div>
         </div>
     );
 };
