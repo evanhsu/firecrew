@@ -1,5 +1,4 @@
 <?php
-$active_menubutton = 'summary';
 $a = strtolower($active_menubutton);
 
 if (!function_exists('is_active')) {
