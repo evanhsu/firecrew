@@ -3,9 +3,14 @@ import { PushUpDrawer } from './Drawer';
 import { Map } from './Map';
 
 export const App = () => {
-    const [isDrawerOpen, setIsDrawerOpen] = useState(true); // TODO: remember with cookie/localstorage
+    const wasDrawerPreviouslyClosed =
+        localStorage.getItem('instructionsDismissed') === '1';
+    const [isDrawerOpen, setIsDrawerOpen] = useState(
+        !wasDrawerPreviouslyClosed
+    );
 
     const handleDrawerToggle = () => {
+        localStorage.setItem('instructionsDismissed', '1');
         setIsDrawerOpen(!isDrawerOpen);
     };
 
