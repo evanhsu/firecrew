@@ -218,6 +218,16 @@ function freshnessNotify($freshness) {
                 </div>
             </div>
 
+            <h3>Integrations</h3>
+
+            <div class="form-group">
+                <label for="webhook_url" class="col-xs-12 col-sm-2 control-label">Webhook URL</label>
+
+                <div class="col-xs-12 col-sm-10">
+                    <input type="text" id="webhook_url" name="crew[webhook_url]" value="{{ $crew->webhook_url }}" class="form-control" />
+                </div>
+            </div>
+            
             <!-- <h3>Home Dispatch Center</h3>
 
             <div class="form-group">
