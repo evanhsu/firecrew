@@ -6,6 +6,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use App\Listeners\SendWebhook;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -15,8 +16,12 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        'App\Events\CrewStatusUpdated' => [],
-        'App\Events\ResourceStatusUpdated' => [],
+        'App\Events\CrewStatusUpdated' => [
+            // SendSlackWebhook::class
+        ],
+        'App\Events\ResourceStatusUpdated' => [
+            SendWebhook::class
+        ],
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
