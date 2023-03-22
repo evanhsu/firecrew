@@ -14,9 +14,9 @@ const mix = require('laravel-mix');
  * This React App uses the top-level package.json
  */
 mix.setPublicPath('public')
-    .js('resources/js/app.js', 'js')
-    .sass('resources/sass/app.scss', 'css')
-    .react();
+    .ts('resources/js/index.tsx', 'js')
+    .react()
+    .sass('resources/sass/app.scss', 'css');
 
 /*
  * The files in the static folder don't require any transpilation or bundling.
@@ -33,14 +33,4 @@ mix.setPublicPath('public')
  * You need to build the map-frontend separately (via `yarn build` in the map-frontend/ folder)
  * and then this step just copies the bundle into the Laravel public folder.
  */
-mix.copy('map-frontend/dist/', 'public/js/map');
-
-// mix.override((webpackConfig) => {
-//     webpackConfig.module.rules.push({
-//         test: /\.m?js/,
-//         resolve: {
-//             fullySpecified: false,
-//         },
-//     });
-// });
-// mix.ts('map-frontend/src/index.tsx', 'js/map').react().extract();
+// mix.copy('map-frontend/dist/', 'public/js/map');

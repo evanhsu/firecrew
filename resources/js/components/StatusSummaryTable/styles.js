@@ -1,11 +1,21 @@
 import Moment from 'moment';
 
+export const statusSummaryTableWrapper = () => ({
+    display: 'flex',
+    width: '100%',
+});
+
 export const getStatusSummaryTableStyle = () => ({
     border: '2px solid black',
     paddingLeft: 0,
     paddingRight: 0,
     minWidth: 1000,
 });
+
+export const tableColWidth = (colIndex) => {
+    const colWidths = [40, 100, 40, 100, 100, 100, 100, 100];
+    return colWidths[colIndex];
+};
 
 export const getCrewRowStyle = (props) => {
     const stale =

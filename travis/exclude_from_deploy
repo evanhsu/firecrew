@@ -1,6 +1,0 @@
-.git*
-.travis.yml
-ansible*
-node_modules
-Vagrantfile
-vagrant.yml

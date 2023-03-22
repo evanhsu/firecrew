@@ -9,9 +9,5 @@
 @endsection
 
 @section('content')
-    <div id="map-root"></div>
-@endsection
-
-@section('scripts-postload')
-    <script src="{{ mix('/js/map/bundle.js') }}"></script>
+    <div id="react-root"></div>
 @endsection

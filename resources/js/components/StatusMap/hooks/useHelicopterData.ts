@@ -95,12 +95,10 @@ export const useHelicopterData = (
                  * Subscribe to the Pusher broadcast channel for ResourceStatus updates
                  */
                 if (
-                    // @ts-expect-error
                     window.Echo?.channel !== undefined &&
                     !eventListenersAreRegistered.current
                 ) {
                     logger.debug('Registering Echo event listener');
-                    // @ts-expect-error
                     window.Echo.channel('publicStatusUpdates').listen(
                         'ResourceStatusUpdated',
                         onEventReceived

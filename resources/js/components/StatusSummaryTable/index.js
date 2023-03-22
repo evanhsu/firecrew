@@ -93,25 +93,17 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
         );
     };
 
-    return (
-        <React.Fragment>
-            <FirstRow
-                helicopterStatusRow={crewRow
-                    .get('statusable_resources')
-                    .first()}
-                totalHelicoptersForThisCrewRowCount={
-                    crewRow.get('statusable_resources').size
-                }
-            />
-            {getAdditionalRows({
-                helicopterStatusRows: crewRow
-                    .get('statusable_resources')
-                    .shift(),
-            })?.map((el) => (
-                <tr>{el}</tr>
-            ))}
-        </React.Fragment>
-    );
+    return [
+        <FirstRow
+            helicopterStatusRow={crewRow.get('statusable_resources').first()}
+            totalHelicoptersForThisCrewRowCount={
+                crewRow.get('statusable_resources').size
+            }
+        />,
+        getAdditionalRows({
+            helicopterStatusRows: crewRow.get('statusable_resources').shift(),
+        })?.map((el) => <tr>{el}</tr>),
+    ];
 };
 
 CrewRow.propTypes = {
