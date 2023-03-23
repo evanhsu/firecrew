@@ -1,7 +1,7 @@
 import WebMap from '@arcgis/core/WebMap';
 import { useCallback, useRef } from 'react';
+import { logger } from '../../../helpers/logger';
 import { HelicopterProps } from '../Helicopter';
-import { logger } from '../utils/Logger';
 
 const translateHelicopterFromApiSchemaToAppSchema = (
     apiHelicopter: any

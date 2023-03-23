@@ -10,10 +10,11 @@ export const getStatusSummaryTableStyle = () => ({
     paddingLeft: 0,
     paddingRight: 0,
     minWidth: 1000,
+    flexGrow: 1,
 });
 
 export const tableColWidth = (colIndex) => {
-    const colWidths = [40, 100, 40, 100, 100, 100, 100, 100];
+    const colWidths = [150, 50, 50, 100, 100, 100, 150, 150];
     return colWidths[colIndex];
 };
 
@@ -30,8 +31,15 @@ export const getCrewRowStyle = (props) => {
 
     return {
         root: {
-            borderBottom: '2px solid black',
+            // borderBottom: '2px solid black',
+            borderTop: '2px solid black',
             transition: 'background-color 100ms ease-in, color 100ms ease-in',
+            backgroundColor,
+            color: props.isSelected ? 'white' : 'black',
+            whiteSpace: 'unset',
+        },
+        additionalHelicopterRow: {
+            borderTop: '1px dashed gray',
             backgroundColor,
             color: props.isSelected ? 'white' : 'black',
             whiteSpace: 'unset',

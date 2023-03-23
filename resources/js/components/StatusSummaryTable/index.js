@@ -2,12 +2,14 @@ import { fromJS, Map } from 'immutable';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
+import { logger } from '../../helpers/logger';
+import { Helicopter } from '../StatusMap/Helicopter';
 import CrewInfo from './CrewInfo';
 import DutyOfficer from './DutyOfficer';
 import * as styles from './styles';
 import Timestamp from './Timestamp';
 
-const formatHelicopterModelForDisplay = (resource) => {
+const HelicopterIdentifier = ({ resource }) => {
     const identifier = resource.get('identifier').toUpperCase();
     let model = '';
 
@@ -25,13 +27,20 @@ const formatHelicopterModelForDisplay = (resource) => {
             break;
     }
 
-    return `${identifier} (${model})`;
+    return (
+        <>
+            {identifier}
+            <br />({model})
+        </>
+    );
 };
 
 const HeaderRow = () => (
     <thead>
         <tr>
-            <th style={{ width: styles.tableColWidth(0) }}>Crew</th>
+            <th style={{ width: styles.tableColWidth(0), paddingLeft: 10 }}>
+                Crew
+            </th>
             <th style={{ width: styles.tableColWidth(1) }}>
                 Available Rappellers
             </th>
@@ -66,7 +75,7 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
     }) => (
         <tr style={crewRowStyle.root} onClick={handleClick(crewRow.get('id'))}>
             <td
-                style={{ width: styles.tableColWidth(0) }}
+                style={{ width: styles.tableColWidth(0), paddingLeft: 10 }}
                 rowSpan={Math.max(1, totalHelicoptersForThisCrewRowCount)}
             >
                 <CrewInfo crew={crewRow} />
@@ -93,22 +102,28 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
         );
     };
 
+    const firstHelicopter = crewRow.get('statusable_resources').first();
+    const additionalHelicopters = crewRow.get('statusable_resources').shift();
+
     return [
         <FirstRow
-            helicopterStatusRow={crewRow.get('statusable_resources').first()}
+            key="firstRow"
+            helicopterStatusRow={firstHelicopter}
             totalHelicoptersForThisCrewRowCount={
                 crewRow.get('statusable_resources').size
             }
         />,
         getAdditionalRows({
-            helicopterStatusRows: crewRow.get('statusable_resources').shift(),
-        })?.map((el) => <tr>{el}</tr>),
+            helicopterStatusRows: additionalHelicopters,
+        })?.map((el, index) => (
+            <tr
+                key={additionalHelicopters.getIn([index, 'identifier'])}
+                style={crewRowStyle.additionalHelicopterRow}
+            >
+                {el}
+            </tr>
+        )),
     ];
-};
-
-CrewRow.propTypes = {
-    crewRow: ImmutablePropTypes.map,
-    isSelected: PropTypes.bool,
 };
 
 const staffingValues = (resource) => {
@@ -136,28 +151,36 @@ const StaffedIncidentList = ({ whitespaceDelimitedString }) => {
 const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
     if (!resource) {
         return [
-            <td></td>,
-            <td></td>,
-            <td></td>,
-            <td></td>,
-            <td></td>,
-            <td></td>,
-            <td></td>,
+            <td key={`staffing`}></td>,
+            <td key={`model`}></td>,
+            <td key={`location`}></td>,
+            <td key={`fire`}></td>,
+            <td key={`manager`}></td>,
+            <td key={`incidents`}></td>,
+            <td key={`info`}></td>,
         ];
     }
-    console.log(resource);
+
+    const keyPrefix = resource.get('identifier');
     return [
-        <td>{staffingValues(resource)}</td>,
-        <td>{formatHelicopterModelForDisplay(resource)}</td>,
-        <td>{resource.getIn(['latest_status', 'location_name'])}</td>,
-        <td>{resource.getIn(['latest_status', 'assigned_fire_name'])}</td>,
-        <td>
+        <td key={`${keyPrefix}-staffing`}>{staffingValues(resource)}</td>,
+        <td key={`${keyPrefix}-model`}>
+            <HelicopterIdentifier resource={resource} />
+        </td>,
+        <td key={`${keyPrefix}-location`}>
+            {resource.getIn(['latest_status', 'location_name'])}
+        </td>,
+        <td key={`${keyPrefix}-fire`}>
+            {resource.getIn(['latest_status', 'assigned_fire_name'])}
+        </td>,
+        <td key={`${keyPrefix}-manager`}>
             {resource.getIn(['latest_status', 'manager_name']) &&
                 `${resource.getIn(['latest_status', 'manager_name'])}`}
+            <br />
             {resource.getIn(['latest_status', 'manager_phone']) &&
-                ` (${resource.getIn(['latest_status', 'manager_phone'])})`}
+                `${resource.getIn(['latest_status', 'manager_phone'])}`}
         </td>,
-        <td>
+        <td key={`${keyPrefix}-incidents`}>
             <StaffedIncidentList
                 whitespaceDelimitedString={resource.getIn([
                     'latest_status',
@@ -165,16 +188,12 @@ const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
                 ])}
             />
         </td>,
-        <td>
+        <td key={`${keyPrefix}-info`}>
             {resource.getIn(['latest_status', 'comments2']) &&
                 resource.getIn(['latest_status', 'comments2'])}
         </td>,
     ];
 };
-
-// CrewResourceRow.propTypes = {
-//     resource: ImmutablePropTypes.map,
-// };
 
 const CrewPersonnelRow = ({ person }) =>
     person.name ? (
