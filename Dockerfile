@@ -1,29 +1,12 @@
 FROM node:16-bullseye AS frontend-build
 
-# Install dependencies for the standalone Map view javascript frontend
-WORKDIR /app/map-frontend
-COPY ./map-frontend/package.json ./package.json
-COPY ./map-frontend/yarn.lock ./yarn.lock
-RUN ["yarn", "install"]
-
-# Build the map-frontend first - the "Laravel Mix" config in the
-# next step will copy the bundled output from this build to the /public folder
-COPY ./map-frontend .
-RUN ["yarn", "build"]
-
-# Docker layer caching isn't optimal here because we build the entire map frontend
-# before installing dependencies for the "Laravel frontend". If the map-frontend is
-# changed at all, we'll need to rebuild the entire Laravel frontend as well.
-
 # Install dependencies for the Laravel javascript frontend
 WORKDIR /app
 COPY ./package.json ./package.json
 COPY ./yarn.lock ./yarn.lock
 RUN ["yarn", "install"]
 
-# Build the Laravel js frontend. The Mix config also includes a step to move
-# the other js frontend (map-frontend) to the public folder alongside the bundle
-# that's built during this step.
+# Build the Laravel js frontend.
 COPY ./webpack.mix.js ./webpack.mix.js
 COPY ./resources ./resources
 COPY ./.env.production ./.env
@@ -51,7 +34,6 @@ RUN chmod a+x ./entrypoint.sh
 COPY ./.env.production ./.env
 # Overwrite the /public folder with output from the frontend build above
 COPY --from=frontend-build /app/public /app/public
-# COPY --from=frontend-build /app/public/mix-manifest.json /app/public/mix-manifest.json
 
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
