@@ -7,7 +7,7 @@ COPY ./yarn.lock ./yarn.lock
 RUN ["yarn", "install"]
 
 # Build the Laravel js frontend.
-COPY ./webpack.mix.js ./webpack.mix.js
+COPY ./webpack.mix.js ./tsconfig.json ./
 COPY ./resources ./resources
 COPY ./.env.production ./.env
 # This writes output files to the /public folder (/public/js, /public/fonts, etc)
