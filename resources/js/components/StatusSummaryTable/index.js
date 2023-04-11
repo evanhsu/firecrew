@@ -75,7 +75,10 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
     }) => (
         <tr style={crewRowStyle.root} onClick={handleClick(crewRow.get('id'))}>
             <td
-                style={{ width: styles.tableColWidth(0), paddingLeft: 10 }}
+                style={{
+                    ...crewRowStyle.crewInfoCell,
+                    width: styles.tableColWidth(0),
+                }}
                 rowSpan={Math.max(1, totalHelicoptersForThisCrewRowCount)}
             >
                 <CrewInfo crew={crewRow} />
@@ -163,7 +166,9 @@ const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
 
     const keyPrefix = resource.get('identifier');
     return [
-        <td key={`${keyPrefix}-staffing`}>{staffingValues(resource)}</td>,
+        <td key={`${keyPrefix}-staffing`} style={{ textAlign: 'center' }}>
+            {staffingValues(resource)}
+        </td>,
         <td key={`${keyPrefix}-model`}>
             <HelicopterIdentifier resource={resource} />
         </td>,

@@ -54,6 +54,10 @@ export const getCrewRowStyle = (props) => {
             border: '1px dashed gray',
             whiteSpace: 'unset',
         },
+        crewInfoCell: {
+            paddingLeft: 10,
+            borderRight: '1px dashed gray',
+        },
     };
 };
 
