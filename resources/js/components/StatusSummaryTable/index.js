@@ -2,12 +2,14 @@ import { fromJS, Map } from 'immutable';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
+import { logger } from '../../helpers/logger';
+import { Helicopter } from '../StatusMap/Helicopter';
 import CrewInfo from './CrewInfo';
 import DutyOfficer from './DutyOfficer';
 import * as styles from './styles';
 import Timestamp from './Timestamp';
 
-const formatHelicopterModelForDisplay = (resource) => {
+const HelicopterIdentifier = ({ resource }) => {
     const identifier = resource.get('identifier').toUpperCase();
     let model = '';
 
@@ -25,89 +27,106 @@ const formatHelicopterModelForDisplay = (resource) => {
             break;
     }
 
-    return `${identifier} (${model})`;
+    return (
+        <>
+            {identifier}
+            <br />({model})
+        </>
+    );
 };
 
 const HeaderRow = () => (
     <thead>
         <tr>
-            <th className="col-xs-2">Crew</th>
-            <th className="col-xs-10">
-                <span className="col-xs-1">Available Rappellers</span>
-                <span className="col-xs-2">Helicopter</span>
-                <span className="col-xs-1">Location</span>
-                <span className="col-xs-2">Current Assignment</span>
-                <span className="col-xs-2">Spotter</span>
-                <span className="col-xs-2">Staffed Incidents</span>
-                <span className="col-xs-2">Additional Info</span>
+            <th style={{ width: styles.tableColWidth(0), paddingLeft: 10 }}>
+                Crew
             </th>
+            <th style={{ width: styles.tableColWidth(1) }}>
+                Available Rappellers
+            </th>
+            <th style={{ width: styles.tableColWidth(2) }}>Helicopter</th>
+            <th style={{ width: styles.tableColWidth(3) }}>Location</th>
+            <th style={{ width: styles.tableColWidth(4) }}>
+                Current Assignment
+            </th>
+            <th style={{ width: styles.tableColWidth(5) }}>Spotter</th>
+            <th style={{ width: styles.tableColWidth(6) }}>
+                Staffed Incidents
+            </th>
+            <th style={{ width: styles.tableColWidth(7) }}>Additional Info</th>
         </tr>
     </thead>
 );
 
+/**
+ * There's 1 "CrewRow" for each Crew, but each crew can have multiple Helicopters ("Resources") that
+ * are each rendered in a sub-table within the CrewRow.
+ */
 const CrewRow = ({ crewRow, isSelected, handleClick }) => {
+    if (typeof crewRow?.get('statusable_resources') === 'undefined') {
+        return null;
+    }
+
     const crewRowStyle = styles.getCrewRowStyle({ crewRow, isSelected });
-    return (
+
+    const FirstRow = ({
+        helicopterStatusRow,
+        totalHelicoptersForThisCrewRowCount,
+    }) => (
         <tr style={crewRowStyle.root} onClick={handleClick(crewRow.get('id'))}>
-            <td className="col-xs-2">
+            <td
+                style={{
+                    ...crewRowStyle.crewInfoCell,
+                    width: styles.tableColWidth(0),
+                }}
+                rowSpan={Math.max(1, totalHelicoptersForThisCrewRowCount)}
+            >
                 <CrewInfo crew={crewRow} />
                 <DutyOfficer dutyOfficer={crewRow.get('status', new Map())} />
                 <Timestamp timestamp={crewRow.get('updated_at')} />
             </td>
-            <td className="col-xs-7 row" style={crewRowStyle.resourceCell}>
-                {crewRow.get('statusable_resources').map((resource, index) => {
-                    return (
-                        <CrewResourceRow
-                            key={resource.get('id')}
-                            resource={resource}
-                            isLastRow={
-                                crewRow.get('statusable_resources').size - 1 ===
-                                index
-                            }
-                        />
-                    );
-                })}
-                {[
-                    'personnel_1_',
-                    'personnel_2_',
-                    'personnel_3_',
-                    'personnel_4_',
-                    'personnel_5_',
-                    'personnel_6_',
-                ].map((person) => (
-                    <CrewPersonnelRow
-                        key={person}
-                        person={{
-                            name: crewRow.getIn(['status', `${person}name`]),
-                            role: crewRow.getIn(['status', `${person}role`]),
-                            location: crewRow.getIn([
-                                'status',
-                                `${person}location`,
-                            ]),
-                            note: crewRow.getIn(['status', `${person}note`]),
-                        }}
-                    />
-                ))}
-                {/* <ReactCSSTransitionGroup
-                    transitionName="slide"
-                    transitionEnterTimeout={300}
-                    transitionLeaveTimeout={250}>
-                    {isSelected ? <ExtraInfoRow key="extra-row" crew={crewRow} isSelected={isSelected}/> : null}
-                </ReactCSSTransitionGroup> */}
-            </td>
-
-            {/* This column is now populated by the CrewResourceRow
-             <td className="col-xs-3" style={crewRowStyle.intelCell}>
-                {crewRow.getIn(['status', 'intel'])}
-            </td>
-            */}
+            {getCrewHelicopterSubRow({
+                resource: helicopterStatusRow,
+                isLastRow: totalHelicoptersForThisCrewRowCount === 1,
+            })}
         </tr>
     );
-};
 
-CrewRow.propTypes = {
-    crewRow: ImmutablePropTypes.map,
-    isSelected: PropTypes.bool,
+    const getAdditionalRows = ({ helicopterStatusRows }) => {
+        if (!helicopterStatusRows || helicopterStatusRows.size === 0) {
+            return null;
+        }
+
+        return helicopterStatusRows.map((helicopterStatus, index) =>
+            getCrewHelicopterSubRow({
+                resource: helicopterStatus,
+                isLastRow: helicopterStatusRows.length - 1 === index,
+            })
+        );
+    };
+
+    const firstHelicopter = crewRow.get('statusable_resources').first();
+    const additionalHelicopters = crewRow.get('statusable_resources').shift();
+
+    return [
+        <FirstRow
+            key="firstRow"
+            helicopterStatusRow={firstHelicopter}
+            totalHelicoptersForThisCrewRowCount={
+                crewRow.get('statusable_resources').size
+            }
+        />,
+        getAdditionalRows({
+            helicopterStatusRows: additionalHelicopters,
+        })?.map((el, index) => (
+            <tr
+                key={additionalHelicopters.getIn([index, 'identifier'])}
+                style={crewRowStyle.additionalHelicopterRow}
+            >
+                {el}
+            </tr>
+        )),
+    ];
 };
 
 const staffingValues = (resource) => {
@@ -132,43 +151,53 @@ const StaffedIncidentList = ({ whitespaceDelimitedString }) => {
     return <span dangerouslySetInnerHTML={{ __html: withHtmlBreaks }}></span>;
 };
 
-const CrewResourceRow = ({ resource, isLastRow = false }) => {
-    return (
-        <span className="row" style={styles.getCrewResourceRowStyle(isLastRow)}>
-            <span className="col-xs-1">{staffingValues(resource)}</span>
-            <span className="col-xs-2">
-                {formatHelicopterModelForDisplay(resource)}
-            </span>
-            <span className="col-xs-1">
-                {resource.getIn(['latest_status', 'location_name'])}
-            </span>
-            <span className="col-xs-2">
-                {resource.getIn(['latest_status', 'assigned_fire_name'])}
-            </span>
-            <span className="col-xs-2">
-                {resource.getIn(['latest_status', 'manager_name']) &&
-                    `${resource.getIn(['latest_status', 'manager_name'])}`}
-                {resource.getIn(['latest_status', 'manager_phone']) &&
-                    ` (${resource.getIn(['latest_status', 'manager_phone'])})`}
-            </span>
-            <span className="col-xs-2">
-                <StaffedIncidentList
-                    whitespaceDelimitedString={resource.getIn([
-                        'latest_status',
-                        'comments1',
-                    ])}
-                />
-            </span>
-            <span className="col-xs-2">
-                {resource.getIn(['latest_status', 'comments2']) &&
-                    resource.getIn(['latest_status', 'comments2'])}
-            </span>
-        </span>
-    );
-};
+const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
+    if (!resource) {
+        return [
+            <td key={`staffing`}></td>,
+            <td key={`model`}></td>,
+            <td key={`location`}></td>,
+            <td key={`fire`}></td>,
+            <td key={`manager`}></td>,
+            <td key={`incidents`}></td>,
+            <td key={`info`}></td>,
+        ];
+    }
 
-CrewResourceRow.propTypes = {
-    resource: ImmutablePropTypes.map,
+    const keyPrefix = resource.get('identifier');
+    return [
+        <td key={`${keyPrefix}-staffing`} style={{ textAlign: 'center' }}>
+            {staffingValues(resource)}
+        </td>,
+        <td key={`${keyPrefix}-model`}>
+            <HelicopterIdentifier resource={resource} />
+        </td>,
+        <td key={`${keyPrefix}-location`}>
+            {resource.getIn(['latest_status', 'location_name'])}
+        </td>,
+        <td key={`${keyPrefix}-fire`}>
+            {resource.getIn(['latest_status', 'assigned_fire_name'])}
+        </td>,
+        <td key={`${keyPrefix}-manager`}>
+            {resource.getIn(['latest_status', 'manager_name']) &&
+                `${resource.getIn(['latest_status', 'manager_name'])}`}
+            <br />
+            {resource.getIn(['latest_status', 'manager_phone']) &&
+                `${resource.getIn(['latest_status', 'manager_phone'])}`}
+        </td>,
+        <td key={`${keyPrefix}-incidents`}>
+            <StaffedIncidentList
+                whitespaceDelimitedString={resource.getIn([
+                    'latest_status',
+                    'comments1',
+                ])}
+            />
+        </td>,
+        <td key={`${keyPrefix}-info`}>
+            {resource.getIn(['latest_status', 'comments2']) &&
+                resource.getIn(['latest_status', 'comments2'])}
+        </td>,
+    ];
 };
 
 const CrewPersonnelRow = ({ person }) =>
@@ -213,11 +242,8 @@ class StatusSummaryTable extends Component {
 
     render() {
         return (
-            <div className="table-responsive">
-                <table
-                    className="table table-condensed"
-                    style={styles.getStatusSummaryTableStyle()}
-                >
+            <div style={styles.statusSummaryTableWrapper()}>
+                <table style={styles.getStatusSummaryTableStyle()}>
                     <HeaderRow />
                     <tbody>
                         {this.props.crews.map((crew) => (

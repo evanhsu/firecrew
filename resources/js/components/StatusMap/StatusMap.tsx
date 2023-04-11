@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PushUpDrawer } from './Drawer';
 import { Map } from './Map';
 
-export const App = () => {
+export const StatusMap = () => {
     const wasDrawerPreviouslyClosed =
         localStorage.getItem('instructionsDismissed') === '1';
     const [isDrawerOpen, setIsDrawerOpen] = useState(

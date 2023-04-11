@@ -1,7 +1,7 @@
 import WebMap from '@arcgis/core/WebMap';
 import { useCallback, useRef } from 'react';
+import { logger } from '../../../helpers/logger';
 import { HelicopterProps } from '../Helicopter';
-import { logger } from '../utils/Logger';
 
 const translateHelicopterFromApiSchemaToAppSchema = (
     apiHelicopter: any
@@ -95,12 +95,10 @@ export const useHelicopterData = (
                  * Subscribe to the Pusher broadcast channel for ResourceStatus updates
                  */
                 if (
-                    // @ts-expect-error
                     window.Echo?.channel !== undefined &&
                     !eventListenersAreRegistered.current
                 ) {
                     logger.debug('Registering Echo event listener');
-                    // @ts-expect-error
                     window.Echo.channel('publicStatusUpdates').listen(
                         'ResourceStatusUpdated',
                         onEventReceived

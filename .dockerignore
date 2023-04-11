@@ -2,8 +2,6 @@
 .env
 .git*
 docker
-map-frontend/node_modules
-map-frontend/node_modules/dist
 node_modules
 public/js/*
 public/css/*
@@ -12,5 +10,4 @@ storage/framework/sessions/*
 storage/framework/testing/*
 storage/framework/views/*
 tests
-travis
 vendor

@@ -5,7 +5,7 @@ import WebMap from '@arcgis/core/WebMap';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Helicopter } from './Helicopter';
 import { OnDataCallback, useHelicopterData } from './hooks/useHelicopterData';
-import { logger } from './utils/Logger';
+import { logger } from '../../helpers/logger';
 
 /**
  * Get a layer (by its ID) from a WebMap
