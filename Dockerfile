@@ -51,21 +51,21 @@ RUN php artisan view:cache
 
 
 # Copy everything to a much smaller php-nginx container (~240MB)
-FROM trafex/php-nginx:2.1.0
+FROM trafex/php-nginx:3.6.0
 
 USER root
 
 # Install Laravel framework system requirements (https://laravel.com/docs/8.x/deployment#server-requirements)
 RUN apk add \
         libxml2-dev \
-        php8-tokenizer \
-        php8-mbstring \
-        php8-pdo_mysql
+        php83-tokenizer \
+        php83-mbstring \
+        php83-pdo_mysql
         # postgresql-dev \
-        # php8-pdo_pgsql
+        # php83-pdo_pgsql
 
 COPY ./nginx.conf /etc/nginx/nginx.conf
-COPY ./php.ini /etc/php8/conf.d/settings.ini
+COPY ./php.ini /etc/php83/conf.d/settings.ini
 
 WORKDIR /var/www/html
 
