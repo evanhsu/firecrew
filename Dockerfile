@@ -1,9 +1,11 @@
-FROM node:16-bullseye AS frontend-build
+FROM node:20-bullseye AS frontend-build
 
 # Install dependencies for the Laravel javascript frontend
 WORKDIR /app
 COPY ./package.json ./package.json
 COPY ./yarn.lock ./yarn.lock
+COPY ./.yarnrc.yml ./.yarnrc.yml
+RUN ["corepack", "enable"]
 RUN ["yarn", "install"]
 
 # Build the Laravel js frontend.
@@ -17,13 +19,13 @@ RUN ["yarn", "production"]
 # The webdevops image has all the php extensions + composer installed
 # It's convenient for the build stage and can be used as the final image if image size isn't a concern.
 # The image from this stage is about ~850MB
-FROM webdevops/php-nginx:8.0-alpine AS php-build
+FROM webdevops/php-nginx:8.3-alpine AS php-build
 
 # Install Laravel framework system requirements (https://laravel.com/docs/8.x/deployment#optimizing-configuration-loading)
 RUN apk add oniguruma-dev postgresql-dev libxml2-dev
 
-ENV WEB_DOCUMENT_ROOT /app/public
-ENV APP_ENV production
+ENV WEB_DOCUMENT_ROOT=/app/public
+ENV APP_ENV=production
 WORKDIR /app
 # Check the .dockerignore file for files that will be excluded
 COPY . .

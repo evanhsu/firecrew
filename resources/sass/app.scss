@@ -1,19 +1,18 @@
-
 // Fonts
 @import url(https://fonts.googleapis.com/css?family=Raleway:300,400,600);
 @import url(https://fonts.googleapis.com/css?family=Anton);
 
 // Variables
-@import "variables";
+@import 'variables';
 
 // Bootstrap
-@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
+@import '~bootstrap-sass/assets/stylesheets/bootstrap';
 
 // Components
-@import "components";
+@import 'components';
 
 // Pages
-@import "pages";
+@import 'pages';
 
 // Main
-@import "main";
+@import 'main';
