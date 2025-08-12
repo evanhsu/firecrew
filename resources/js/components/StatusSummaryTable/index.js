@@ -41,9 +41,7 @@ const HeaderRow = () => (
             <th style={{ width: styles.tableColWidth(0), paddingLeft: 10 }}>
                 Crew
             </th>
-            <th style={{ width: styles.tableColWidth(1) }}>
-                Available Rappellers
-            </th>
+            <th style={{ width: styles.tableColWidth(1) }}>Staffing</th>
             <th style={{ width: styles.tableColWidth(2) }}>Helicopter</th>
             <th style={{ width: styles.tableColWidth(3) }}>Location</th>
             <th style={{ width: styles.tableColWidth(4) }}>
@@ -53,6 +51,7 @@ const HeaderRow = () => (
             <th style={{ width: styles.tableColWidth(6) }}>
                 Staffed Incidents
             </th>
+            <th style={{ width: styles.tableColWidth(1) }}>Boosters In</th>
             <th style={{ width: styles.tableColWidth(7) }}>Additional Info</th>
         </tr>
     </thead>
@@ -67,32 +66,95 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
         return null;
     }
 
-    const crewRowStyle = styles.getCrewRowStyle({ crewRow, isSelected });
-
-    const FirstRow = ({
-        helicopterStatusRow,
-        totalHelicoptersForThisCrewRowCount,
-    }) => (
-        <tr style={crewRowStyle.root} onClick={handleClick(crewRow.get('id'))}>
-            <td
-                style={{
-                    ...crewRowStyle.crewInfoCell,
-                    width: styles.tableColWidth(0),
-                }}
-                rowSpan={Math.max(1, totalHelicoptersForThisCrewRowCount)}
-            >
-                <CrewInfo crew={crewRow} />
-                <DutyOfficer dutyOfficer={crewRow.get('status', new Map())} />
-                <Timestamp timestamp={crewRow.get('updated_at')} />
-            </td>
-            {getCrewHelicopterSubRow({
-                resource: helicopterStatusRow,
-                isLastRow: totalHelicoptersForThisCrewRowCount === 1,
-            })}
-        </tr>
+    const helicopterRows = crewRow.get('statusable_resources');
+    const totalStaffing = helicopterRows.reduce(
+        (total, helicopter) =>
+            total +
+            parseInt(
+                helicopter.getIn(['latest_status', 'staffing_value1'], 0),
+                10
+            ),
+        0
+    );
+    const totalBoosters = helicopterRows.reduce(
+        (total, helicopter) =>
+            total +
+            parseInt(
+                helicopter.getIn(['latest_status', 'staffing_value2'], 0) || 0,
+                10
+            ),
+        0
     );
 
-    const getAdditionalRows = ({ helicopterStatusRows }) => {
+    const crewRowStyle = styles.getCrewRowStyle({ crewRow, isSelected });
+
+    const CrewInfoCell = ({ totalHelicoptersForThisCrewRowCount }) => (
+        <td
+            style={{
+                ...crewRowStyle.crewInfoCell,
+                width: styles.tableColWidth(0),
+            }}
+            // Add 1 to the number of helicopters to include the "Totals" row
+            rowSpan={Math.max(1, totalHelicoptersForThisCrewRowCount + 1)}
+        >
+            <CrewInfo crew={crewRow} />
+            <DutyOfficer dutyOfficer={crewRow.get('status', new Map())} />
+            <Timestamp timestamp={crewRow.get('updated_at')} />
+        </td>
+    );
+
+    const FirstRow = () => {
+        if (crewRow.get('statusable_resources').size === 0) {
+            return (
+                <tr
+                    style={crewRowStyle.root}
+                    onClick={handleClick(crewRow.get('id'))}
+                >
+                    <CrewInfoCell
+                        totalHelicoptersForThisCrewRowCount={
+                            crewRow.get('statusable_resources').size
+                        }
+                    />
+                    <td key={`staffing`}></td>
+                    <td key={`model`}></td>
+                    <td key={`location`}></td>
+                    <td key={`fire`}></td>
+                    <td key={`manager`}></td>
+                    <td key={`incidents`}></td>
+                    <td key={`boosters`}></td>
+                    <td key={`info`}></td>
+                </tr>
+            );
+        }
+
+        return (
+            <tr
+                style={crewRowStyle.root}
+                onClick={handleClick(crewRow.get('id'))}
+            >
+                <CrewInfoCell
+                    totalHelicoptersForThisCrewRowCount={
+                        crewRow.get('statusable_resources').size
+                    }
+                />
+                <td
+                    key={`staffing`}
+                    style={{ paddingLeft: 10, textAlign: 'left' }}
+                >
+                    {totalStaffing} Total
+                </td>
+                <td key={`model`}></td>
+                <td key={`location`}></td>
+                <td key={`fire`}></td>
+                <td key={`manager`}></td>
+                <td key={`incidents`}></td>
+                <td key={`boosters`}>{totalBoosters} Total</td>
+                <td key={`info`}></td>
+            </tr>
+        );
+    };
+
+    const getHelicopterRows = ({ helicopterStatusRows }) => {
         if (!helicopterStatusRows || helicopterStatusRows.size === 0) {
             return null;
         }
@@ -105,23 +167,19 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
         );
     };
 
-    const firstHelicopter = crewRow.get('statusable_resources').first();
-    const additionalHelicopters = crewRow.get('statusable_resources').shift();
-
     return [
-        <FirstRow
-            key="firstRow"
-            helicopterStatusRow={firstHelicopter}
-            totalHelicoptersForThisCrewRowCount={
-                crewRow.get('statusable_resources').size
-            }
-        />,
-        getAdditionalRows({
-            helicopterStatusRows: additionalHelicopters,
+        <FirstRow key="first-row" />,
+        getHelicopterRows({
+            helicopterStatusRows: crewRow.get('statusable_resources'),
         })?.map((el, index) => (
             <tr
-                key={additionalHelicopters.getIn([index, 'identifier'])}
+                key={crewRow.getIn([
+                    'statusable_resources',
+                    index,
+                    'identifier',
+                ])}
                 style={crewRowStyle.additionalHelicopterRow}
+                onClick={handleClick(crewRow.get('id'))}
             >
                 {el}
             </tr>
@@ -138,6 +196,18 @@ const staffingValues = (resource) => {
             // resource.getIn(['latest_status', 'staffing_value3'], '-'),
         ];
         return staffingValues.join(' / ');
+    }
+
+    return '';
+};
+
+const boostersIn = (resource) => {
+    if (resource.get('resource_type') === 'RappelHelicopter') {
+        const boostersCount = resource.getIn(
+            ['latest_status', 'staffing_value2'],
+            '0'
+        );
+        return boostersCount;
     }
 
     return '';
@@ -160,13 +230,17 @@ const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
             <td key={`fire`}></td>,
             <td key={`manager`}></td>,
             <td key={`incidents`}></td>,
+            <td key={`boosters`}></td>,
             <td key={`info`}></td>,
         ];
     }
 
     const keyPrefix = resource.get('identifier');
     return [
-        <td key={`${keyPrefix}-staffing`} style={{ textAlign: 'center' }}>
+        <td
+            key={`${keyPrefix}-staffing`}
+            style={{ textAlign: 'left', paddingLeft: 10 }}
+        >
             {staffingValues(resource)}
         </td>,
         <td key={`${keyPrefix}-model`}>
@@ -193,6 +267,7 @@ const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
                 ])}
             />
         </td>,
+        <td key={`${keyPrefix}-boosters`}>{boostersIn(resource)}</td>,
         <td key={`${keyPrefix}-info`}>
             {resource.getIn(['latest_status', 'comments2']) &&
                 resource.getIn(['latest_status', 'comments2'])}
@@ -232,6 +307,7 @@ class StatusSummaryTable extends Component {
     }
 
     handleCrewRowClick = (crewId) => () => {
+        console.log(`Crew row clicked: ${crewId}`);
         this.setState((prevState) => {
             return {
                 selectedCrewRow:
