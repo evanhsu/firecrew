@@ -1,4 +1,4 @@
-<form id="status-form" action="{{ route('store_status_for_crew_resource', ['crewId' => $crew->id, 'identifier' => $resource->identifier]) }}"
+<form id="status-form-{{ $resource->identifier }}" action="{{ route('store_status_for_crew_resource', ['crewId' => $crew->id, 'identifier' => $resource->identifier]) }}"
       method="POST"
       class="form-horizontal helicopter-status-form"
 >
@@ -132,108 +132,124 @@
             <script>
                 (function() {
                     // Only set up the event handler once
-                    if (window.staffedIncidentsInitialized) {
-                        return;
-                    }
-                    window.staffedIncidentsInitialized = true;
+                    // if (window.staffedIncidentsInitialized) {
+                    //     return;
+                    // }
+                    // window.staffedIncidentsInitialized = true;
                     
-                    // Move these functions inside our main IIFE but outside the DOMContentLoaded handler
-
-                function createStaffedIncidentRow(index, data = {}) {
-                    return `
-                        <div class="staffed-incident-row" data-index="${index}" style="margin-bottom:8px; display: flex">
-                                <input style="margin-right: 10px; width: 100px;" type="text" name="staffed_incidents[${index}][personnel]" class="form-control" placeholder="Personnel" value="${data.personnel ? data.personnel.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
-                                <input style="margin-right: 10px" type="text" name="staffed_incidents[${index}][incident_name]" class="form-control" placeholder="Incident Name/Number" value="${data.incident_name ? data.incident_name.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
-                                <input style="margin-right: 10px; width: 150px;" type="text" name="staffed_incidents[${index}][demob]" class="form-control" placeholder="Est. Demob Date" value="${data.demob ? data.demob.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
-                                <button type="button" class="btn btn-danger delete-staffed-incident-row">
-                                    <span class="glyphicon glyphicon-trash"></span>
-                                </button>
-                        </div>
-                    `;
-                }
-
-                function renderStaffedIncidentRows(formInstance, incidents) {
-                    const container = formInstance.querySelector('.staffed-incidents-rows');
-                    container.innerHTML = '';
-                    incidents.forEach((row, idx) => {
-                        container.innerHTML += createStaffedIncidentRow(idx, row);
-                    });
-                }
-
-                // Initialize each form instance separately
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Find all instances of the helicopter status form on the page
-                    document.querySelectorAll('.helicopter-status-form').forEach(function(formInstance) {
-                        // Get initial data for this form instance
-                        const commentsField = formInstance.querySelector('input[name="comments1"]');
-                        const initialValue = commentsField.value;
-                        const initialIncidents = initialValue ? JSON.parse(initialValue) : [];
+                    // Parse existing server data if available (should be formatted as JSON string)
+                    var initialIncidents = [];
+                    @if(isset($status->comments1))
+                        initialIncidents = JSON.parse(@json($status->comments1));
+                    @endif
                         
-                        // Create a closure for this form instance's variables
-                        (function() {
-                            var staffedIncidents = Array.isArray(initialIncidents) && initialIncidents.length > 0 
-                                ? [...initialIncidents] 
-                                : [];
-                            
-                            function getCurrentStaffedIncidentValues() {
-                                const rows = formInstance.querySelectorAll('.staffed-incident-row');
-                                if (!rows || rows.length === 0) {
-                                    return [];
-                                }
-                                return Array.from(rows).map(row => {
-                                    const personnel = row.querySelector('input[name*="[personnel]"]').value || '';
-                                    const incident_name = row.querySelector('input[name*="[incident_name]"]').value || '';
-                                    const demob = row.querySelector('input[name*="[demob]"]').value || '';
-                                    return { personnel, incident_name, demob };
-                                });
-                            }
+                    function createStaffedIncidentRow(index, data = {}) {
+                        return `
+                            <div class="staffed-incident-row" data-index="${index}" style="margin-bottom:8px; display: flex">
+                                    <input style="margin-right: 10px; width: 100px;" type="text" name="staffed_incidents[${index}][personnel]" class="form-control" placeholder="Personnel" value="${data.personnel ? data.personnel.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
+                                    <input style="margin-right: 10px" type="text" name="staffed_incidents[${index}][incident_name]" class="form-control" placeholder="Incident Name/Number" value="${data.incident_name ? data.incident_name.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
+                                    <input style="margin-right: 10px; width: 150px;" type="text" name="staffed_incidents[${index}][demob]" class="form-control" placeholder="Est. Demob Date" value="${data.demob ? data.demob.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
+                                    <button type="button" class="btn btn-danger delete-staffed-incident-row">
+                                        <span class="glyphicon glyphicon-trash"></span>
+                                    </button>
+                            </div>
+                        `;
+                    }
 
-                            function handleAddRow() {
-                                if (formInstance.querySelectorAll('.staffed-incident-row').length > 0) {
-                                    staffedIncidents = getCurrentStaffedIncidentValues();
-                                    staffedIncidents.push({});
-                                } else {
-                                    staffedIncidents = [{}];
-                                }
+                    function renderStaffedIncidentRows(formInstance, incidents) {
+                        const container = formInstance.querySelector('.staffed-incidents-rows');
+                        container.innerHTML = '';
+                        incidents.forEach((row, idx) => {
+                            container.innerHTML += createStaffedIncidentRow(idx, row);
+                        });
+                    }
+
+                    // Initialize each form instance separately
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Find all instances of this helicopter status form on the page (there should only be one)
+                        console.log('status-form-{{ $resource->identifier }}');
+                        console.log(initialIncidents);
+                        const formInstance = document.getElementById('status-form-{{ $resource->identifier }}');
+                        if (!formInstance) {
+                            console.warn('No form instance found for identifier {{ $resource->identifier }}');
+                            return;
+                        }
+                            
+                        // Always create a new array to avoid reference issues
+                        var staffedIncidents = [];
+                        
+                        // If we have valid initial data, use it
+                        if (Array.isArray(initialIncidents) && initialIncidents.length > 0) {
+                            staffedIncidents = initialIncidents.map(incident => ({
+                                personnel: incident.personnel || '',
+                                incident_name: incident.incident_name || '',
+                                demob: incident.demob || ''
+                            }));
+                        } else {
+                            // Otherwise start with one empty row
+                            staffedIncidents = [{ personnel: '', incident_name: '', demob: '' }];
+                        }
+                        
+                        function getCurrentStaffedIncidentValues() {
+                            const rows = formInstance.querySelectorAll('.staffed-incident-row');
+                            if (!rows || rows.length === 0) {
+                                return [];
+                            }
+                            return Array.from(rows).map(row => {
+                                const personnel = row.querySelector('input[name*="[personnel]"]').value || '';
+                                const incident_name = row.querySelector('input[name*="[incident_name]"]').value || '';
+                                const demob = row.querySelector('input[name*="[demob]"]').value || '';
+                                return { personnel, incident_name, demob };
+                            });
+                        }
+
+                        function handleAddRow() {
+                            if (formInstance.querySelectorAll('.staffed-incident-row').length > 0) {
+                                staffedIncidents = getCurrentStaffedIncidentValues();
+                                staffedIncidents.push({});
+                            } else {
+                                staffedIncidents = [{}];
+                            }
+                            renderStaffedIncidentRows(formInstance, staffedIncidents);
+                        }
+
+                        function handleDeleteRow(e) {
+                            // Check if the click was on the button or the icon inside it
+                            const deleteButton = e.target.classList.contains('delete-staffed-incident-row') ? 
+                                e.target : 
+                                e.target.closest('.delete-staffed-incident-row');
+                            
+                            if (deleteButton) {
+                                staffedIncidents = getCurrentStaffedIncidentValues();
+                                const row = deleteButton.closest('.staffed-incident-row');
+                                const idx = parseInt(row.getAttribute('data-index'));
+                                staffedIncidents.splice(idx, 1);
+                                if(staffedIncidents.length === 0) staffedIncidents.push({});
                                 renderStaffedIncidentRows(formInstance, staffedIncidents);
                             }
+                        }
 
-                            function handleDeleteRow(e) {
-                                // Check if the click was on the button or the icon inside it
-                                const deleteButton = e.target.classList.contains('delete-staffed-incident-row') ? 
-                                    e.target : 
-                                    e.target.closest('.delete-staffed-incident-row');
-                                
-                                if (deleteButton) {
-                                    staffedIncidents = getCurrentStaffedIncidentValues();
-                                    const row = deleteButton.closest('.staffed-incident-row');
-                                    const idx = parseInt(row.getAttribute('data-index'));
-                                    staffedIncidents.splice(idx, 1);
-                                    if(staffedIncidents.length === 0) staffedIncidents.push({});
-                                    renderStaffedIncidentRows(formInstance, staffedIncidents);
-                                }
-                            }
+                        console.log('Initializing staffed incidents for form instance');
+                        renderStaffedIncidentRows(formInstance, staffedIncidents);
 
-                            console.log('Initializing staffed incidents for form instance');
-                            renderStaffedIncidentRows(formInstance, staffedIncidents);
+                        // Add event listeners scoped to this form instance
+                        const addButton = formInstance.querySelector('.btn-success');
+                        addButton.addEventListener('click', handleAddRow);
 
-                            // Add event listeners scoped to this form instance
-                            const addButton = formInstance.querySelector('.btn-success');
-                            addButton.addEventListener('click', handleAddRow);
+                        const rowsContainer = formInstance.querySelector('.staffed-incidents-rows');
+                        rowsContainer.addEventListener('click', handleDeleteRow);
 
-                            const rowsContainer = formInstance.querySelector('.staffed-incidents-rows');
-                            rowsContainer.addEventListener('click', handleDeleteRow);
+                        // When the submit button is clicked, serialize the "staffed_incidents" dynamic fields to JSON and store in the hidden input field named "comments1"
+                        // That form field will be stored in comments1 db column as text (JSON string)
+                        formInstance.addEventListener('submit', function(e) {
+                            staffedIncidents = getCurrentStaffedIncidentValues()
+                                .filter(incident => incident.personnel || incident.incident_name || incident.demob);
+                            formInstance.querySelector('input[name="comments1"]').value = JSON.stringify(staffedIncidents);
+                        });
+                    }); // Close the DOMContentLoaded
+                
+                })(); // Close the IIFE
 
-                            // Handle form submission for this instance
-                            formInstance.addEventListener('submit', function(e) {
-                                staffedIncidents = getCurrentStaffedIncidentValues()
-                                    .filter(incident => incident.personnel || incident.incident_name || incident.demob);
-                                commentsField.value = JSON.stringify(staffedIncidents);
-                            });
-                        })(); // Close the form instance IIFE
-                    }); // Close the forEach
-                }); // Close the DOMContentLoaded
-                })(); // Close the main IIFE
             </script>
         </div>
         <div class="form-group">
