@@ -267,7 +267,7 @@ const StaffedIncidentList = ({ jsonString }) => {
     try {
         incidents = JSON.parse(jsonString);
     } catch (e) {
-        console.error('Failed to parse staffed incidents JSON', e);
+        console.debug('Failed to parse staffed incidents JSON', e);
         return null;
     }
     const incidentRows = incidents.map((incident, index) => {
