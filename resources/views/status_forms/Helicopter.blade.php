@@ -1,6 +1,6 @@
-<form action="{{ route('store_status_for_crew_resource', ['crewId' => $crew->id, 'identifier' => $resource->identifier]) }}"
+<form id="status-form" action="{{ route('store_status_for_crew_resource', ['crewId' => $crew->id, 'identifier' => $resource->identifier]) }}"
       method="POST"
-      class="form-horizontal"
+      class="form-horizontal helicopter-status-form"
 >
     {{ csrf_field() }}
     <input type="hidden" name="statusable_resource_type" value="{{ $resource->resource_type }}" />
@@ -117,13 +117,124 @@
     <div class="col-xs-12">
         <h2>Remarks</h2>
         <div class="form-group">
-            <label for="comments1" class="col-xs-4 col-sm-2 control-label control-label-with-helper">Staffed Incidents</label>
+            <label class="col-xs-4 col-sm-2 control-label control-label-with-helper">Staffed Incidents</label>
             <a role="button" class="control-label-helper" tabindex="0" data-toggle="popover" title="Staffed Incidents" data-trigger="focus" data-content="i.e. MHF-355: Parker+3">
                 <span class="glyphicon glyphicon-question-sign"></span>
             </a>
             <div class="col-xs-12 col-sm-6 col-md-6">
-                <textarea name="comments1" id="comments1" class="form-control" rows="4">{{ $status->comments1 }}</textarea>
+                <div class="staffed-incidents-rows">
+                    <!-- Rows will be inserted here by JS -->
+                </div>
+                <button type="button" class="btn btn-success" style="margin-top:10px;">Add an incident</button>
+                <!-- This is the field that will actually be process by the server. The staffed_incidents dynamic fields will be serialized to JSON and stored here upon form submit -->
+                <input type="hidden" name="comments1" value="">
             </div>
+            <script>
+                (function() {
+                    // Only set up the event handler once
+                    if (window.staffedIncidentsInitialized) {
+                        return;
+                    }
+                    window.staffedIncidentsInitialized = true;
+                    
+                    // Move these functions inside our main IIFE but outside the DOMContentLoaded handler
+
+                function createStaffedIncidentRow(index, data = {}) {
+                    return `
+                        <div class="staffed-incident-row" data-index="${index}" style="margin-bottom:8px; display: flex">
+                                <input style="margin-right: 10px; width: 100px;" type="text" name="staffed_incidents[${index}][personnel]" class="form-control" placeholder="Personnel" value="${data.personnel ? data.personnel.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
+                                <input style="margin-right: 10px" type="text" name="staffed_incidents[${index}][incident_name]" class="form-control" placeholder="Incident Name/Number" value="${data.incident_name ? data.incident_name.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
+                                <input style="margin-right: 10px; width: 150px;" type="text" name="staffed_incidents[${index}][demob]" class="form-control" placeholder="Est. Demob Date" value="${data.demob ? data.demob.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
+                                <button type="button" class="btn btn-danger delete-staffed-incident-row">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </button>
+                        </div>
+                    `;
+                }
+
+                function renderStaffedIncidentRows(formInstance, incidents) {
+                    const container = formInstance.querySelector('.staffed-incidents-rows');
+                    container.innerHTML = '';
+                    incidents.forEach((row, idx) => {
+                        container.innerHTML += createStaffedIncidentRow(idx, row);
+                    });
+                }
+
+                // Initialize each form instance separately
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Find all instances of the helicopter status form on the page
+                    document.querySelectorAll('.helicopter-status-form').forEach(function(formInstance) {
+                        // Get initial data for this form instance
+                        const commentsField = formInstance.querySelector('input[name="comments1"]');
+                        const initialValue = commentsField.value;
+                        const initialIncidents = initialValue ? JSON.parse(initialValue) : [];
+                        
+                        // Create a closure for this form instance's variables
+                        (function() {
+                            var staffedIncidents = Array.isArray(initialIncidents) && initialIncidents.length > 0 
+                                ? [...initialIncidents] 
+                                : [];
+                            
+                            function getCurrentStaffedIncidentValues() {
+                                const rows = formInstance.querySelectorAll('.staffed-incident-row');
+                                if (!rows || rows.length === 0) {
+                                    return [];
+                                }
+                                return Array.from(rows).map(row => {
+                                    const personnel = row.querySelector('input[name*="[personnel]"]').value || '';
+                                    const incident_name = row.querySelector('input[name*="[incident_name]"]').value || '';
+                                    const demob = row.querySelector('input[name*="[demob]"]').value || '';
+                                    return { personnel, incident_name, demob };
+                                });
+                            }
+
+                            function handleAddRow() {
+                                if (formInstance.querySelectorAll('.staffed-incident-row').length > 0) {
+                                    staffedIncidents = getCurrentStaffedIncidentValues();
+                                    staffedIncidents.push({});
+                                } else {
+                                    staffedIncidents = [{}];
+                                }
+                                renderStaffedIncidentRows(formInstance, staffedIncidents);
+                            }
+
+                            function handleDeleteRow(e) {
+                                // Check if the click was on the button or the icon inside it
+                                const deleteButton = e.target.classList.contains('delete-staffed-incident-row') ? 
+                                    e.target : 
+                                    e.target.closest('.delete-staffed-incident-row');
+                                
+                                if (deleteButton) {
+                                    staffedIncidents = getCurrentStaffedIncidentValues();
+                                    const row = deleteButton.closest('.staffed-incident-row');
+                                    const idx = parseInt(row.getAttribute('data-index'));
+                                    staffedIncidents.splice(idx, 1);
+                                    if(staffedIncidents.length === 0) staffedIncidents.push({});
+                                    renderStaffedIncidentRows(formInstance, staffedIncidents);
+                                }
+                            }
+
+                            console.log('Initializing staffed incidents for form instance');
+                            renderStaffedIncidentRows(formInstance, staffedIncidents);
+
+                            // Add event listeners scoped to this form instance
+                            const addButton = formInstance.querySelector('.btn-success');
+                            addButton.addEventListener('click', handleAddRow);
+
+                            const rowsContainer = formInstance.querySelector('.staffed-incidents-rows');
+                            rowsContainer.addEventListener('click', handleDeleteRow);
+
+                            // Handle form submission for this instance
+                            formInstance.addEventListener('submit', function(e) {
+                                staffedIncidents = getCurrentStaffedIncidentValues()
+                                    .filter(incident => incident.personnel || incident.incident_name || incident.demob);
+                                commentsField.value = JSON.stringify(staffedIncidents);
+                            });
+                        })(); // Close the form instance IIFE
+                    }); // Close the forEach
+                }); // Close the DOMContentLoaded
+                })(); // Close the main IIFE
+            </script>
         </div>
         <div class="form-group">
             <label for="comments2" class="col-xs-4 col-sm-2 control-label control-label-with-helper">Additional Info</label>

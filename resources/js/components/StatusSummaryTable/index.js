@@ -85,6 +85,50 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
             ),
         0
     );
+    // Each helicopter can have multiple staffed incidents, so we need to sum the personnel across all incidents
+    // for all of this crew's helicopters.
+    // The personnel count is stored in the 'comments1' field of the latest status, which is a JSON string,
+    // so we need to parse the JSON and extract the personnel count from each staffed incident.
+    const totalPersonnelOnStaffedIncidents = helicopterRows.reduce(
+        (total, helicopter) => {
+            const staffedIncidents = helicopter.getIn(
+                ['latest_status', 'comments1'],
+                ''
+            );
+            if (!staffedIncidents) {
+                return total;
+            }
+
+            let incidentsArray = [];
+            try {
+                incidentsArray = JSON.parse(staffedIncidents);
+                if (
+                    !Array.isArray(incidentsArray) ||
+                    incidentsArray.length === 0
+                ) {
+                    return total;
+                }
+            } catch (e) {
+                return total;
+            }
+
+            const personnelCount = incidentsArray.reduce(
+                (personnelTotal, incident) => {
+                    if (incident.personnel) {
+                        const personnel = parseInt(incident.personnel, 10);
+                        if (!isNaN(personnel)) {
+                            return personnelTotal + personnel;
+                        }
+                    }
+                    return personnelTotal;
+                },
+                0
+            );
+
+            return total + personnelCount;
+        },
+        0
+    );
 
     const crewRowStyle = styles.getCrewRowStyle({ crewRow, isSelected });
 
@@ -147,7 +191,9 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
                 <td key={`location`}></td>
                 <td key={`fire`}></td>
                 <td key={`manager`}></td>
-                <td key={`incidents`}></td>
+                <td key={`incidents`}>
+                    {totalPersonnelOnStaffedIncidents} Total
+                </td>
                 <td key={`boosters`}>{totalBoosters} Total</td>
                 <td key={`info`}></td>
             </tr>
@@ -213,12 +259,42 @@ const boostersIn = (resource) => {
     return '';
 };
 
-const StaffedIncidentList = ({ whitespaceDelimitedString }) => {
-    if (!whitespaceDelimitedString) {
+const StaffedIncidentList = ({ jsonString }) => {
+    if (!jsonString) {
         return null;
     }
-    const withHtmlBreaks = whitespaceDelimitedString.replace(/\s+/, `<br />`);
-    return <span dangerouslySetInnerHTML={{ __html: withHtmlBreaks }}></span>;
+    let incidents = [];
+    try {
+        incidents = JSON.parse(jsonString);
+    } catch (e) {
+        console.error('Failed to parse staffed incidents JSON', e);
+        return null;
+    }
+    const incidentRows = incidents.map((incident, index) => {
+        const personnel = incident.personnel || '';
+        const incidentName = incident.incident_name || '';
+        const demob = incident.demob || '';
+        return (
+            <tr key={incidentName + index}>
+                <td style={{ width: 50 }}>{personnel}</td>
+                <td style={{ textAlign: 'center' }}>{incidentName}</td>
+                <td>{demob}</td>
+            </tr>
+        );
+    });
+
+    return (
+        <table style={{ width: '100%' }}>
+            <thead>
+                <tr>
+                    <th style={{ width: 50 }}>Personnel</th>
+                    <th style={{ textAlign: 'center' }}>Incident </th>
+                    <th style={{}}>Est. Demob</th>
+                </tr>
+            </thead>
+            <tbody>{incidentRows.length > 0 && incidentRows}</tbody>
+        </table>
+    );
 };
 
 const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
@@ -261,10 +337,7 @@ const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
         </td>,
         <td key={`${keyPrefix}-incidents`}>
             <StaffedIncidentList
-                whitespaceDelimitedString={resource.getIn([
-                    'latest_status',
-                    'comments1',
-                ])}
+                jsonString={resource.getIn(['latest_status', 'comments1'])}
             />
         </td>,
         <td key={`${keyPrefix}-boosters`}>{boostersIn(resource)}</td>,
@@ -307,7 +380,6 @@ class StatusSummaryTable extends Component {
     }
 
     handleCrewRowClick = (crewId) => () => {
-        console.log(`Crew row clicked: ${crewId}`);
         this.setState((prevState) => {
             return {
                 selectedCrewRow:
