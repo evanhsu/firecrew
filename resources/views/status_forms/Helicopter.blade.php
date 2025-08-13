@@ -140,7 +140,13 @@
                     // Parse existing server data if available (should be formatted as JSON string)
                     var initialIncidents = [];
                     @if(isset($status->comments1))
-                        initialIncidents = JSON.parse(@json($status->comments1));
+                        try {
+                            initialIncidents = JSON.parse(@json($status->comments1));
+                        }
+                        catch (e) {
+                            console.log('Couldn\'t JSON.parse initial data for Staffed Incidents: ', e);
+                            initialIncidents = [];
+                        }
                     @endif
                         
                     function createStaffedIncidentRow(index, data = {}) {
@@ -158,6 +164,7 @@
 
                     function renderStaffedIncidentRows(formInstance, incidents) {
                         const container = formInstance.querySelector('.staffed-incidents-rows');
+                        // console.log('Rendering staffed incident rows:', incidents);
                         container.innerHTML = '';
                         incidents.forEach((row, idx) => {
                             container.innerHTML += createStaffedIncidentRow(idx, row);
@@ -167,8 +174,8 @@
                     // Initialize each form instance separately
                     document.addEventListener('DOMContentLoaded', function() {
                         // Find all instances of this helicopter status form on the page (there should only be one)
-                        console.log('status-form-{{ $resource->identifier }}');
-                        console.log(initialIncidents);
+                        // console.log('status-form-{{ $resource->identifier }}');
+                        // console.log(initialIncidents);
                         const formInstance = document.getElementById('status-form-{{ $resource->identifier }}');
                         if (!formInstance) {
                             console.warn('No form instance found for identifier {{ $resource->identifier }}');
@@ -229,7 +236,6 @@
                             }
                         }
 
-                        console.log('Initializing staffed incidents for form instance');
                         renderStaffedIncidentRows(formInstance, staffedIncidents);
 
                         // Add event listeners scoped to this form instance
