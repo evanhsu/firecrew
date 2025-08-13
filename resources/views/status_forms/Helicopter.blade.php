@@ -84,7 +84,14 @@
                 <span class="glyphicon glyphicon-question-sign"></span>
             </a>
             <div class="col-xs-12 col-sm-6 col-md-6">
-                <input type="text" name="assigned_fire_name" id="assigned_fire_name" class="form-control" value="{{ $status->assigned_fire_name }}" placeholder="i.e. The Example Fire, Local IA, etc">
+                <select name="assigned_fire_name" id="assigned_fire_name" class="form-control">
+                    <option value="">-- Select Assignment --</option>
+                    <option value="Local IA" {{ $status->assigned_fire_name == 'Local IA' ? 'selected' : '' }}>Local IA</option>
+                    <option value="Prepo" {{ $status->assigned_fire_name == 'Prepo' ? 'selected' : '' }}>Prepo</option>
+                    <option value="Large Fire Support" {{ $status->assigned_fire_name == 'Large Fire Support' ? 'selected' : '' }}>Large Fire Support</option>
+                    <option value="Project" {{ $status->assigned_fire_name == 'Project' ? 'selected' : '' }}>Project</option>
+                    <option value="Other" {{ $status->assigned_fire_name == 'Other' ? 'selected' : '' }}>Other</option>
+                </select>
             </div>
         </div>
         <!-- <div class="form-group">
