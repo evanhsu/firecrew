@@ -57,16 +57,11 @@ const HeaderRow = () => (
     </thead>
 );
 
-/**
- * There's 1 "CrewRow" for each Crew, but each crew can have multiple Helicopters ("Resources") that
- * are each rendered in a sub-table within the CrewRow.
- */
-const CrewRow = ({ crewRow, isSelected, handleClick }) => {
-    if (typeof crewRow?.get('statusable_resources') === 'undefined') {
-        return null;
-    }
-
-    const helicopterRows = crewRow.get('statusable_resources');
+const TotalsRow = ({ crews = fromJS([]) }) => {
+    // Get all the helicopters from all crews
+    const helicopterRows = crews.flatMap((crew) =>
+        crew.get('statusable_resources')
+    );
     const totalStaffing = helicopterRows.reduce(
         (total, helicopter) =>
             total +
@@ -130,6 +125,29 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
         0
     );
 
+    return (
+        <tr style={{ backgroundColor: '#eee' }}>
+            <td style={{ paddingLeft: 10 }}>Totals</td>
+            <td>{totalStaffing} Total</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>{totalPersonnelOnStaffedIncidents} Total</td>
+            <td>{totalBoosters} Total</td>
+            <td></td>
+        </tr>
+    );
+};
+/**
+ * There's 1 "CrewRow" for each Crew, but each crew can have multiple Helicopters ("Resources") that
+ * are each rendered in a sub-table within the CrewRow.
+ */
+const CrewRow = ({ crewRow, isSelected, handleClick }) => {
+    if (typeof crewRow?.get('statusable_resources') === 'undefined') {
+        return null;
+    }
+
     const crewRowStyle = styles.getCrewRowStyle({ crewRow, isSelected });
 
     const CrewInfoCell = ({ totalHelicoptersForThisCrewRowCount }) => (
@@ -138,8 +156,7 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
                 ...crewRowStyle.crewInfoCell,
                 width: styles.tableColWidth(0),
             }}
-            // Add 1 to the number of helicopters to include the "Totals" row
-            rowSpan={Math.max(1, totalHelicoptersForThisCrewRowCount + 1)}
+            rowSpan={Math.max(1, totalHelicoptersForThisCrewRowCount)}
         >
             <CrewInfo crew={crewRow} />
             <DutyOfficer dutyOfficer={crewRow.get('status', new Map())} />
@@ -147,30 +164,9 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
         </td>
     );
 
-    const FirstRow = () => {
-        if (crewRow.get('statusable_resources').size === 0) {
-            return (
-                <tr
-                    style={crewRowStyle.root}
-                    onClick={handleClick(crewRow.get('id'))}
-                >
-                    <CrewInfoCell
-                        totalHelicoptersForThisCrewRowCount={
-                            crewRow.get('statusable_resources').size
-                        }
-                    />
-                    <td key={`staffing`}></td>
-                    <td key={`model`}></td>
-                    <td key={`location`}></td>
-                    <td key={`fire`}></td>
-                    <td key={`manager`}></td>
-                    <td key={`incidents`}></td>
-                    <td key={`boosters`}></td>
-                    <td key={`info`}></td>
-                </tr>
-            );
-        }
-
+    // Display the "CrewInfoCell" in the first row of the crew row.
+    // It will span as many rows as there are helicopters in this crew row.
+    const FirstRow = ({ firstHelicopter }) => {
         return (
             <tr
                 style={crewRowStyle.root}
@@ -181,21 +177,10 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
                         crewRow.get('statusable_resources').size
                     }
                 />
-                <td
-                    key={`staffing`}
-                    style={{ paddingLeft: 10, textAlign: 'left' }}
-                >
-                    {totalStaffing} Total
-                </td>
-                <td key={`model`}></td>
-                <td key={`location`}></td>
-                <td key={`fire`}></td>
-                <td key={`manager`}></td>
-                <td key={`incidents`}>
-                    {totalPersonnelOnStaffedIncidents} Total
-                </td>
-                <td key={`boosters`}>{totalBoosters} Total</td>
-                <td key={`info`}></td>
+                {getCrewHelicopterSubRow({
+                    resource: firstHelicopter,
+                    isLastRow: crewRow.get('statusable_resources').size === 1,
+                })}
             </tr>
         );
     };
@@ -213,10 +198,13 @@ const CrewRow = ({ crewRow, isSelected, handleClick }) => {
         );
     };
 
+    const firstHelicopter = crewRow.getIn(['statusable_resources', 0]);
+    const additionalHelicopters = crewRow.get('statusable_resources').slice(1);
+
     return [
-        <FirstRow key="first-row" />,
+        <FirstRow key="first-row" firstHelicopter={firstHelicopter} />,
         getHelicopterRows({
-            helicopterStatusRows: crewRow.get('statusable_resources'),
+            helicopterStatusRows: additionalHelicopters,
         })?.map((el, index) => (
             <tr
                 key={crewRow.getIn([
@@ -394,6 +382,7 @@ class StatusSummaryTable extends Component {
                 <table style={styles.getStatusSummaryTableStyle()}>
                     <HeaderRow />
                     <tbody>
+                        <TotalsRow crews={this.props.crews} />
                         {this.props.crews.map((crew) => (
                             <CrewRow
                                 key={crew.get('id')}
