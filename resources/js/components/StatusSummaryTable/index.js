@@ -62,24 +62,28 @@ const TotalsRow = ({ crews = fromJS([]) }) => {
     const helicopterRows = crews.flatMap((crew) =>
         crew.get('statusable_resources')
     );
-    const totalStaffing = helicopterRows.reduce(
-        (total, helicopter) =>
-            total +
-            parseInt(
-                helicopter.getIn(['latest_status', 'staffing_value1'], 0),
-                10
-            ),
-        0
-    );
-    const totalBoosters = helicopterRows.reduce(
-        (total, helicopter) =>
-            total +
-            parseInt(
-                helicopter.getIn(['latest_status', 'staffing_value2'], 0) || 0,
-                10
-            ),
-        0
-    );
+    const totalStaffing = helicopterRows.reduce((total, helicopter) => {
+        const staffing = parseInt(
+            helicopter.getIn(['latest_status', 'staffing_value1'], 0),
+            10
+        );
+        if (isNaN(staffing)) {
+            return total;
+        }
+        return total + staffing;
+    }, 0);
+
+    const totalBoosters = helicopterRows.reduce((total, helicopter) => {
+        const boostersIn = parseInt(
+            helicopter.getIn(['latest_status', 'staffing_value2'], 0) || 0,
+            10
+        );
+        if (isNaN(boostersIn)) {
+            return total;
+        }
+        return total + boostersIn;
+    }, 0);
+
     // Each helicopter can have multiple staffed incidents, so we need to sum the personnel across all incidents
     // for all of this crew's helicopters.
     // The personnel count is stored in the 'comments1' field of the latest status, which is a JSON string,
