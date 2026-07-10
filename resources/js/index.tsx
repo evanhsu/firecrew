@@ -19,14 +19,25 @@ declare global {
     }
 }
 
-window.Pusher = require('pusher-js');
+window.Pusher = Pusher;
 
-window.Echo = new Echo({
-    broadcaster: 'pusher',
-    key: process.env.MIX_PUSHER_APP_KEY,
-    cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-    forceTLS: true,
-});
+const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
+const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
+
+if (pusherKey) {
+    window.Echo = new Echo({
+        broadcaster: 'pusher',
+        key: pusherKey,
+        cluster: pusherCluster,
+        forceTLS: true,
+    });
+} else {
+    window.Echo = {
+        channel: () => ({
+            listen: () => window.Echo,
+        }),
+    } as Echo;
+}
 
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose; // eslint-disable-line no-underscore-dangle
 const initialState = fromJS({});

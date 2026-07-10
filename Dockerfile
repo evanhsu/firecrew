@@ -1,4 +1,4 @@
-FROM node:20-bullseye AS frontend-build
+FROM node:22-bookworm AS frontend-build
 
 # Install dependencies for the Laravel javascript frontend
 WORKDIR /app
@@ -9,11 +9,10 @@ RUN ["corepack", "enable"]
 RUN ["yarn", "install"]
 
 # Build the Laravel js frontend.
-COPY ./webpack.mix.js ./tsconfig.json ./
+COPY ./vite.config.js ./tsconfig.json ./
 COPY ./resources ./resources
 COPY ./.env.production ./.env
-# This writes output files to the /public folder (/public/js, /public/fonts, etc)
-RUN ["yarn", "production"]
+RUN ["yarn", "build"]
 
 
 # The webdevops image has all the php extensions + composer installed
@@ -41,7 +40,6 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 # Build static files for Laravel to improve performance
 RUN php artisan route:cache
-RUN php artisan api:cache
 RUN php artisan view:cache
 # RUN php artisan config:cache # DISABLE this to allow env vars to be read from the system environment
 

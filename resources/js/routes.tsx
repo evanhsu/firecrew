@@ -1,14 +1,24 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
-import { StatusMap } from './components/StatusMap/StatusMap';
 import StatusSummary from './containers/StatusSummary';
+
+const StatusMap = lazy(() =>
+    import('./components/StatusMap/StatusMap').then((module) => ({
+        default: module.StatusMap,
+    }))
+);
 
 const router = createBrowserRouter([
     {
-        path: 'map',
-        element: <StatusMap />,
+        path: '/map',
+        element: (
+            <Suspense fallback={null}>
+                <StatusMap />
+            </Suspense>
+        ),
     },
     {
-        path: 'summary',
+        path: '/summary',
         element: <StatusSummary />,
     },
     {

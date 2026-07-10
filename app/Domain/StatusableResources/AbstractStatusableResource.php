@@ -45,7 +45,7 @@ class AbstractStatusableResource extends Model
 
     public function latestStatus()
     {
-        return $this->hasOne(ResourceStatus::class, 'statusable_resource_id')->latest();
+        return $this->hasOne(ResourceStatus::class, 'statusable_resource_id')->latestOfMany();
     }
 
     public function status()
