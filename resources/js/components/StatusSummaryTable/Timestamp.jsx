@@ -1,25 +1,33 @@
-import React from 'react';
+import { Text } from '@mantine/core';
 import PropTypes from 'prop-types';
 import Moment from 'moment';
 import momentTz from 'moment-timezone';
 
 const localDateString = (utcDateString) => {
-  const localTimeZone = momentTz.tz.guess();
-  const localTimeZoneAbbr = momentTz.tz.zone(localTimeZone).abbr(Moment.now());
+    const localTimeZone = momentTz.tz.guess();
+    const localTimeZoneAbbr = momentTz.tz.zone(localTimeZone).abbr(Moment.now());
 
-  return `${Moment.utc(utcDateString).tz(localTimeZone).calendar()} ${localTimeZoneAbbr}`;
+    return `${Moment.utc(utcDateString).tz(localTimeZone).calendar()} ${localTimeZoneAbbr}`;
 };
 
-const Timestamp = ({ timestamp }) => (
-  timestamp === undefined ? null :
-    (<span style={{ fontSize: 11 }}>Update: {localDateString(timestamp)} ({Moment.utc(timestamp).fromNow()})</span>)
-);
+const Timestamp = ({ timestamp }) => {
+    if (timestamp === undefined || timestamp === null) {
+        return null;
+    }
+
+    return (
+        <Text size="xs" c="dimmed">
+            Updated {localDateString(timestamp)} ({Moment.utc(timestamp).fromNow()})
+        </Text>
+    );
+};
 
 Timestamp.propTypes = {
-  timestamp: PropTypes.node,
+    timestamp: PropTypes.node,
 };
+
 Timestamp.defaultProps = {
-  timestamp: null,
+    timestamp: null,
 };
 
 export default Timestamp;

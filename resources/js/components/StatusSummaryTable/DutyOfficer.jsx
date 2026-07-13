@@ -1,41 +1,39 @@
-import React from 'react';
+import { Anchor, Text } from '@mantine/core';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 
-const DutyOfficer = (props) => {
-  if(props.dutyOfficer === null) {
-    return null;
-  }
+const DutyOfficer = ({ dutyOfficer }) => {
+    if (!dutyOfficer) {
+        return null;
+    }
 
-  if(props.dutyOfficer.get('duty_officer_name') && props.dutyOfficer.get('duty_officer_phone')) { 
+    const name = dutyOfficer.get('duty_officer_name');
+    const phone = dutyOfficer.get('duty_officer_phone');
+
+    if (!name && !phone) {
+        return null;
+    }
+
     return (
-      <span>
-        <b>Operations:</b><br />
-        {props.dutyOfficer.get('duty_officer_name')}<br />
-        {props.dutyOfficer.get('duty_officer_phone')}<br />
-      </span>
+        <div>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Operations
+            </Text>
+            {name && (
+                <Text size="sm" lh={1.3}>
+                    {name}
+                </Text>
+            )}
+            {phone && (
+                <Anchor href={`tel:${phone}`} size="sm">
+                    {phone}
+                </Anchor>
+            )}
+        </div>
     );
-  }
-  if(props.dutyOfficer.get('duty_officer_name')) {
-    return (
-      <span>
-        <b>Operations:</b><br />
-        {props.dutyOfficer.get('duty_officer_name')}<br />
-      </span>
-    );
-  }
-  if(props.dutyOfficer.get('duty_officer_phone')) {
-    return (
-      <span>
-        <b>Operations:</b><br />
-        {props.dutyOfficer.get('duty_officer_phone')}<br />
-      </span>
-    );
-  }
-  return null;
 };
 
 DutyOfficer.propTypes = {
-  dutyOfficer: ImmutablePropTypes.map,
+    dutyOfficer: ImmutablePropTypes.map,
 };
 
 export default DutyOfficer;
