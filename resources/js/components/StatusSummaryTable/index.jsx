@@ -3,21 +3,37 @@ import {
     Badge,
     Box,
     Collapse,
-    Group,
-    Paper,
-    SimpleGrid,
     Stack,
     Text,
     Title,
     UnstyledButton,
+    SimpleGrid,
+    Paper,
+    Group,
 } from '@mantine/core';
 import { fromJS, Map } from 'immutable';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import DutyOfficer from './DutyOfficer';
+import PersonnelCountLabel from './PersonnelCountLabel';
 import { isCrewStale } from './styles';
 import Timestamp from './Timestamp';
+
+/** Shared column template so header + collapsed rows stay aligned. */
+const OVERVIEW_GRID_COLUMNS = {
+    base: '14px minmax(0, 1fr) 4.5rem',
+    sm: '14px minmax(9rem, 1.5fr) 4.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 6.75rem',
+    md: '14px minmax(9rem, 1.4fr) 4.5rem minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) 6.75rem',
+};
+
+const overviewGridStyle = (breakpoint) => ({
+    display: 'grid',
+    gridTemplateColumns: OVERVIEW_GRID_COLUMNS[breakpoint] || OVERVIEW_GRID_COLUMNS.base,
+    alignItems: 'center',
+    columnGap: 'var(--mantine-spacing-md)',
+    width: '100%',
+});
 
 const HELICOPTER_MODELS = {
     '412epx': 'Bell 412EPX',
@@ -159,17 +175,16 @@ function computeTotals(crews) {
 }
 
 const Field = ({ label, children }) => {
-    if (children === null || children === undefined || children === '') {
-        return null;
-    }
+    const isEmpty =
+        children === null || children === undefined || children === '';
 
     return (
         <Box>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600} mb={2}>
                 {label}
             </Text>
-            <Text size="sm" component="div">
-                {children}
+            <Text size="sm" component="div" c={isEmpty ? 'dimmed' : undefined}>
+                {isEmpty ? '—' : children}
             </Text>
         </Box>
     );
@@ -239,9 +254,7 @@ const StaffedIncidentList = ({ jsonString }) => {
                         align="flex-start"
                     >
                         {personnel !== '' && (
-                            <Badge variant="light" color="gray" radius="sm">
-                                {personnel}
-                            </Badge>
+                            <PersonnelCountLabel count={personnel} />
                         )}
                         <Box style={{ flex: 1, minWidth: 0 }}>
                             <Text size="sm" fw={500} lh={1.3}>
@@ -294,9 +307,10 @@ const HelicopterCard = ({ resource }) => {
     const staffing = staffingValues(resource);
     const boosters = boostersIn(resource);
     const staffedIncidents = resource.getIn(['latest_status', 'comments1']);
-    const showSpotter = Boolean(managerName || managerPhone);
-    const showIncidents = hasStaffedIncidents(staffedIncidents);
-    const showBoosters = boosters !== '';
+    const hasSpotter = Boolean(managerName || managerPhone);
+    const incidentsContent = hasStaffedIncidents(staffedIncidents) ? (
+        <StaffedIncidentList jsonString={staffedIncidents} />
+    ) : null;
 
     return (
         <Paper
@@ -318,17 +332,16 @@ const HelicopterCard = ({ resource }) => {
                     )}
                 </Box>
                 {staffing !== '' && (
-                    <Badge size="lg" variant="light" color="blue" radius="sm">
-                        {staffing} staffed
-                    </Badge>
+                    <PersonnelCountLabel count={staffing} size="lg" />
                 )}
             </Group>
 
+            {/* Fixed field order so sections stay in the same grid slot across aircraft */}
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
                 <Field label="Location">{location}</Field>
                 <Field label="Current assignment">{assignment}</Field>
-                {showSpotter && (
-                    <Field label="Spotter">
+                <Field label="Spotter">
+                    {hasSpotter ? (
                         <Stack gap={2}>
                             {managerName && <Text size="sm">{managerName}</Text>}
                             {managerPhone && (
@@ -341,14 +354,12 @@ const HelicopterCard = ({ resource }) => {
                                 </Anchor>
                             )}
                         </Stack>
-                    </Field>
-                )}
-                {showBoosters && <Field label="Boosters in">{boosters}</Field>}
-                {showIncidents && (
-                    <Field label="Staffed incidents">
-                        <StaffedIncidentList jsonString={staffedIncidents} />
-                    </Field>
-                )}
+                    ) : null}
+                </Field>
+                <Field label="Boosters in">
+                    {boosters === '' ? null : boosters}
+                </Field>
+                <Field label="Staffed incidents">{incidentsContent}</Field>
                 <Field label="Additional info">{comments2}</Field>
             </SimpleGrid>
         </Paper>
@@ -359,26 +370,14 @@ HelicopterCard.propTypes = {
     resource: ImmutablePropTypes.map,
 };
 
-const OverviewCell = ({ label, children, flex = 1, hideBelow }) => (
-    <Box
-        style={{ flex, minWidth: 0 }}
-        visibleFrom={hideBelow}
-        miw={0}
-    >
-        <Text size="xs" c="dimmed" tt="uppercase" fw={600} visibleFrom="md">
-            {label}
-        </Text>
-        <Text size="sm" truncate="end" fw={500}>
-            {children}
-        </Text>
-    </Box>
+const OverviewCell = ({ children }) => (
+    <Text size="sm" truncate="end" fw={500}>
+        {children}
+    </Text>
 );
 
 OverviewCell.propTypes = {
-    label: PropTypes.string.isRequired,
     children: PropTypes.node,
-    flex: PropTypes.number,
-    hideBelow: PropTypes.string,
 };
 
 const ExpandIcon = ({ expanded }) => (
@@ -403,6 +402,51 @@ ExpandIcon.propTypes = {
     expanded: PropTypes.bool,
 };
 
+const OverviewHeader = () => (
+    <>
+        <Box px="md" pb={4} hiddenFrom="sm" />
+        <Box px="md" pb={4} visibleFrom="sm" hiddenFrom="md" style={overviewGridStyle('sm')}>
+            <Box />
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Crew
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Personnel
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Helicopter
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Location
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Status
+            </Text>
+        </Box>
+        <Box px="md" pb={4} visibleFrom="md" style={overviewGridStyle('md')}>
+            <Box />
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Crew
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Personnel
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Helicopter
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Location
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Assignment
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                Status
+            </Text>
+        </Box>
+    </>
+);
+
 const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
     if (typeof crewRow?.get('statusable_resources') === 'undefined') {
         return null;
@@ -417,6 +461,12 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
         ? 'var(--mantine-color-blue-0)'
         : 'var(--mantine-color-body)';
 
+    const statusBadge = stale ? (
+        <Badge color="yellow" variant="light" radius="sm">
+            Needs update
+        </Badge>
+    ) : null;
+
     return (
         <Paper
             component="article"
@@ -427,12 +477,13 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                 borderColor: isExpanded
                     ? 'var(--mantine-color-blue-3)'
                     : 'var(--mantine-color-gray-3)',
-                borderLeftWidth: stale || isExpanded ? 4 : 1,
+                // Always use a 4px left border so columns stay aligned across rows
+                borderLeftWidth: 4,
                 borderLeftColor: isExpanded
                     ? 'var(--mantine-color-blue-5)'
                     : stale
                       ? 'var(--mantine-color-yellow-6)'
-                      : undefined,
+                      : 'var(--mantine-color-gray-3)',
                 transition:
                     'background-color 120ms ease, border-color 120ms ease',
                 overflow: 'hidden',
@@ -449,57 +500,50 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                     textAlign: 'left',
                 }}
             >
-                <Group
-                    gap="md"
-                    wrap="nowrap"
-                    align="center"
-                    justify="space-between"
-                >
-                    <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-                        <ExpandIcon expanded={isExpanded} />
-
-                        <Box style={{ flex: '1.4 1 140px', minWidth: 0 }}>
-                            <Text fw={700} size="sm" truncate="end" lh={1.3}>
-                                {crewRow.get('name')}
-                            </Text>
-                            <Text size="xs" c="dimmed" truncate="end" hiddenFrom="sm">
-                                {overview.identifiers.join(' · ') || 'No helicopter'}
-                                {' · '}
-                                {overview.location}
-                            </Text>
-                        </Box>
-
-                        <Box style={{ flex: '0 0 auto' }}>
-                            <Badge variant="light" color="blue" radius="sm">
-                                {overview.totalStaffing || 0}
-                            </Badge>
-                        </Box>
-
-                        <OverviewCell label="Helicopter" flex={1.1} hideBelow="sm">
-                            {overview.identifiers.join(' · ') || '—'}
-                        </OverviewCell>
-
-                        <OverviewCell label="Location" flex={1.2} hideBelow="sm">
+                {/* Mobile overview */}
+                <Box hiddenFrom="sm" style={overviewGridStyle('base')}>
+                    <ExpandIcon expanded={isExpanded} />
+                    <Box style={{ minWidth: 0 }}>
+                        <Text fw={700} size="sm" truncate="end" lh={1.3}>
+                            {crewRow.get('name')}
+                        </Text>
+                        <Text size="xs" c="dimmed" truncate="end">
+                            {overview.identifiers.join(' · ') || 'No helicopter'}
+                            {' · '}
                             {overview.location}
-                        </OverviewCell>
+                        </Text>
+                    </Box>
+                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
+                </Box>
 
-                        <OverviewCell label="Assignment" flex={1.3} hideBelow="md">
-                            {overview.assignment}
-                        </OverviewCell>
-                    </Group>
+                {/* Tablet overview */}
+                <Box visibleFrom="sm" hiddenFrom="md" style={overviewGridStyle('sm')}>
+                    <ExpandIcon expanded={isExpanded} />
+                    <Text fw={700} size="sm" truncate="end">
+                        {crewRow.get('name')}
+                    </Text>
+                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
+                    <OverviewCell>
+                        {overview.identifiers.join(' · ') || '—'}
+                    </OverviewCell>
+                    <OverviewCell>{overview.location}</OverviewCell>
+                    <Box>{statusBadge}</Box>
+                </Box>
 
-                    {stale && (
-                        <Badge
-                            color="yellow"
-                            variant="light"
-                            radius="sm"
-                            visibleFrom="sm"
-                            style={{ flexShrink: 0 }}
-                        >
-                            Needs update
-                        </Badge>
-                    )}
-                </Group>
+                {/* Desktop overview */}
+                <Box visibleFrom="md" style={overviewGridStyle('md')}>
+                    <ExpandIcon expanded={isExpanded} />
+                    <Text fw={700} size="sm" truncate="end">
+                        {crewRow.get('name')}
+                    </Text>
+                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
+                    <OverviewCell>
+                        {overview.identifiers.join(' · ') || '—'}
+                    </OverviewCell>
+                    <OverviewCell>{overview.location}</OverviewCell>
+                    <OverviewCell>{overview.assignment}</OverviewCell>
+                    <Box>{statusBadge}</Box>
+                </Box>
             </UnstyledButton>
 
             <Collapse expanded={isExpanded}>
@@ -540,6 +584,16 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                                     timestamp={crewRow.get('updated_at')}
                                 />
                             </Stack>
+                            {stale && (
+                                <Badge
+                                    color="yellow"
+                                    variant="light"
+                                    radius="sm"
+                                    hiddenFrom="sm"
+                                >
+                                    Needs update
+                                </Badge>
+                            )}
                         </Group>
 
                         <Stack gap="sm">
@@ -608,56 +662,7 @@ class StatusSummaryTable extends Component {
                     <SummaryTotals crews={crews} />
 
                     <Stack gap="xs">
-                        <Group
-                            gap="md"
-                            wrap="nowrap"
-                            px="md"
-                            visibleFrom="sm"
-                            pb={4}
-                        >
-                            <Box w={14} style={{ flexShrink: 0 }} />
-                            <Text
-                                size="xs"
-                                c="dimmed"
-                                tt="uppercase"
-                                fw={600}
-                                style={{ flex: '1.4 1 140px' }}
-                            >
-                                Crew
-                            </Text>
-                            <Box w={42} visibleFrom="xs" />
-                            <Text
-                                size="xs"
-                                c="dimmed"
-                                tt="uppercase"
-                                fw={600}
-                                style={{ flex: '1.1 1 0' }}
-                                visibleFrom="sm"
-                            >
-                                Helicopter
-                            </Text>
-                            <Text
-                                size="xs"
-                                c="dimmed"
-                                tt="uppercase"
-                                fw={600}
-                                style={{ flex: '1.2 1 0' }}
-                                visibleFrom="sm"
-                            >
-                                Location
-                            </Text>
-                            <Text
-                                size="xs"
-                                c="dimmed"
-                                tt="uppercase"
-                                fw={600}
-                                style={{ flex: '1.3 1 0' }}
-                                visibleFrom="md"
-                            >
-                                Assignment
-                            </Text>
-                            <Box w={110} style={{ flexShrink: 0 }} />
-                        </Group>
+                        <OverviewHeader />
 
                         {crews.map((crew) => (
                             <CrewRow

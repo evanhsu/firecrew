@@ -28,6 +28,7 @@
     "dependencies": {
         "@mantine/core": "^9.4.1",
         "@mantine/hooks": "^9.4.1",
+        "@phosphor-icons/react": "^2.1.10",
         "@turf/circle": "^7.3.5",
         "@types/react-redux": "^7.1.25",
         "@types/react-router-dom": "^5.3.3",
