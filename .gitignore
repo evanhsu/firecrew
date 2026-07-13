@@ -26,4 +26,4 @@ map-frontend/dist/
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
-install-state.gz
+.yarn/install-state.gz
