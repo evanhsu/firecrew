@@ -65,7 +65,7 @@ $section-min-height: 400px;
 			width: 90%;
 		}
 
-		@media (min-width: $screen-sm-min) {
+		@media (min-width: $breakpoint-sm) {
 			.row {
 				display: flex;
 				align-items: center;

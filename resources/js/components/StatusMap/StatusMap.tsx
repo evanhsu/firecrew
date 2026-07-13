@@ -1,3 +1,4 @@
+import { Group, Image, Text } from '@mantine/core';
 import { useState } from 'react';
 import { PushUpDrawer } from './Drawer';
 import { Map } from './Map';
@@ -16,26 +17,24 @@ export const StatusMap = () => {
 
     return (
         <>
-            <Map isDrawerOpen={isDrawerOpen} />
+            <Map />
             <PushUpDrawer
                 open={isDrawerOpen}
                 toggleDrawerOpen={handleDrawerToggle}
             >
-                <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    <span>
-                        <img src="/images/symbols/rappelhelicopter-fresh.png" />
-                    </span>
-                    <span
-                        style={{
-                            fontSize: '1.2em',
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
-                    >
+                <Group gap="sm" wrap="nowrap">
+                    <Image
+                        src="/images/symbols/rappelhelicopter-fresh.png"
+                        alt="Rappel helicopter"
+                        w={32}
+                        h={32}
+                        fit="contain"
+                    />
+                    <Text size="md">
                         Click on a helicopter to see its IA Range and additional
                         details
-                    </span>
-                </div>
+                    </Text>
+                </Group>
             </PushUpDrawer>
         </>
     );

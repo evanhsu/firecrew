@@ -17,7 +17,7 @@ class ViewServiceProvider extends ServiceProvider {
         // Bind each Composer to its Views
 
         // The MenubarComposer should be called whenever the 'menubar' View is invoked
-        View::composer('menubar', MenubarComposer::class);
+        View::composer(['menubar', 'layouts.app'], MenubarComposer::class);
     }
 
     /**

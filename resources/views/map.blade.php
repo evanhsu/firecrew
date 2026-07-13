@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://js.arcgis.com/4.25/@arcgis/core/assets/esri/themes/light/main.css">
 @endsection
 
+@section('app-content-class', 'app-content--full-height')
+
 @section('content')
     <div id="react-root"></div>
 @endsection

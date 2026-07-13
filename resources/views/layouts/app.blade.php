@@ -19,14 +19,13 @@
     <title>@yield('page-title')</title>
     <meta name="description" content="@yield('page-description')">
 
-    <!-- Styles -->
-    @vite(['resources/sass/app.scss'])
-@yield('stylesheets')
+    @yield('stylesheets')
 
 <!-- Scripts -->
     <script>
         window.Laravel = {!! json_encode([
             'csrfToken' => csrf_token(),
+            'nav' => $nav ?? null,
             'pusher' => [
                 'appKey' => env('PUSHER_APP_KEY'),
                 'cluster' => env('PUSHER_APP_CLUSTER'),
@@ -56,27 +55,26 @@
 </head>
 <body>
 <div id="app">
-    @include('menubar')
+    <div id="react-shell"></div>
 
-    @if (Session::has('alert'))
-        <div class="alert alert-{{ isset(Session::get('alert')['type']) ? Session::get('alert')['type'] : 'info' }}"
-             style="margin-bottom: 0"
-             role="alert"
-        >
-            {{ Session::get('alert')['message'] }}
-        </div>
-    @endif
+    <div id="app-content" class="app-content @yield('app-content-class', '')">
+        @if (Session::has('alert'))
+            <div class="alert alert-{{ isset(Session::get('alert')['type']) ? Session::get('alert')['type'] : 'info' }}"
+                 style="margin-bottom: 0"
+                 role="alert"
+            >
+                {{ Session::get('alert')['message'] }}
+            </div>
+        @endif
 
-    @yield('content')
-    <div class="clearfix" style=""></div>
+        @yield('content')
+        <div class="clearfix"></div>
+    </div>
 </div>
 
 @section('scripts-postload')
-    <!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=default%2Ces6%2Cfetch"></script>{{-- Polyfills for older browsers --}} -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    @vite(['resources/js/index.tsx'])
+    @viteReactRefresh
+    @vite(['resources/sass/app.scss', 'resources/js/index.tsx'])
 @show
 
 </body>

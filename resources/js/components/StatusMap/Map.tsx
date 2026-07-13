@@ -1,3 +1,4 @@
+import { APP_HEADER_HEIGHT } from '../../layout/AppHeader';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import MapView from '@arcgis/core/views/MapView';
@@ -75,10 +76,7 @@ const createHelicopterDataHandler: (webMap: WebMap | null) => OnDataCallback =
         });
     };
 
-export type MapProps = {
-    isDrawerOpen: boolean;
-};
-const Map = ({ isDrawerOpen }: MapProps) => {
+const Map = () => {
     const mapDiv = useRef<HTMLDivElement>(null);
     // This ref is used to guarantee that the WebMap isn't built twice.
     // Since the WebMap is bound to a DOM element with userRef(), it persists between re-renders
@@ -257,7 +255,7 @@ const Map = ({ isDrawerOpen }: MapProps) => {
         }
     }, []);
 
-    const height = isDrawerOpen ? 'calc(100vh - 251px)' : 'calc(100vh - 51px)'; // 51px is the height of the top nav
+    const height = `calc(100vh - ${APP_HEADER_HEIGHT}px)`;
     return (
         <div style={{ height }}>
             {/* <button

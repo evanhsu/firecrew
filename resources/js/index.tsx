@@ -1,6 +1,12 @@
+import './legacy-ui';
+import './crews-edit';
+
+import '@mantine/core/styles.css';
+
 import React from 'react';
 import * as ReactDOMClient from 'react-dom/client';
 
+import { MantineProvider } from '@mantine/core';
 import { applyMiddleware, compose, createStore } from 'redux';
 import { Provider } from 'react-redux';
 import thunkMiddleware from 'redux-thunk';
@@ -8,6 +14,8 @@ import { RouterProvider } from 'react-router-dom';
 import { fromJS } from 'immutable';
 import rootReducer from './reducers';
 import router from './routes';
+import { AppFooter } from './layout/AppFooter';
+import { AppHeader } from './layout/AppHeader';
 import Pusher from 'pusher-js';
 import Echo from 'laravel-echo';
 
@@ -48,11 +56,23 @@ const store = createStore(
     composeEnhancers(applyMiddleware(thunkMiddleware))
 );
 
-const container = document.getElementById('react-root');
-if (container) {
-    ReactDOMClient.createRoot(container).render(
-        <Provider store={store}>
-            <RouterProvider router={router} />
-        </Provider>
+const shellContainer = document.getElementById('react-shell');
+if (shellContainer) {
+    ReactDOMClient.createRoot(shellContainer).render(
+        <MantineProvider>
+            <AppHeader />
+            <AppFooter />
+        </MantineProvider>
+    );
+}
+
+const pageContainer = document.getElementById('react-root');
+if (pageContainer) {
+    ReactDOMClient.createRoot(pageContainer).render(
+        <MantineProvider>
+            <Provider store={store}>
+                <RouterProvider router={router} />
+            </Provider>
+        </MantineProvider>
     );
 }

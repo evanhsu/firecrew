@@ -2,7 +2,7 @@
 	padding-right: 0 !important;
 }
 
-@media screen and (min-width: $screen-md-min) {
+@media screen and (min-width: $breakpoint-md) {
 	.control-label-helper {
 		float: left;
 	}

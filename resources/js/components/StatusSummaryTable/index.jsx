@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { logger } from '../../helpers/logger';
-import { Helicopter } from '../StatusMap/Helicopter';
 import CrewInfo from './CrewInfo';
 import DutyOfficer from './DutyOfficer';
 import * as styles from './styles';
@@ -351,14 +350,14 @@ const getCrewHelicopterSubRow = ({ resource, isLastRow = false }) => {
 
 const CrewPersonnelRow = ({ person }) =>
     person.name ? (
-        <span className="row" style={styles.getCrewResourceRowStyle()}>
-            <span className="col-xs-2"> </span>
-            <span className="col-xs-3">
+        <span style={styles.getCrewResourceRowStyle()}>
+            <span style={{ display: 'inline-block', width: '16.666%' }}> </span>
+            <span style={{ display: 'inline-block', width: '25%' }}>
                 {person.name}
                 {person.role && ` [${person.role}]`}
             </span>
-            <span className="col-xs-3">{person.location}</span>
-            <span className="col-xs-4">{person.note}</span>
+            <span style={{ display: 'inline-block', width: '25%' }}>{person.location}</span>
+            <span style={{ display: 'inline-block', width: '33.333%' }}>{person.note}</span>
         </span>
     ) : null;
 
