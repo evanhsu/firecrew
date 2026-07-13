@@ -1,10 +1,7 @@
-// Fonts
-@import url(https://fonts.googleapis.com/css?family=Raleway:300,400,600);
+@use 'legacy-forms';
+@use 'components';
+@use 'pages';
+@use 'main';
+
+// Used by the sales landing page hero
 @import url(https://fonts.googleapis.com/css?family=Anton);
-
-@import 'variables';
-@import 'legacy-forms';
-
-@import 'components';
-@import 'pages';
-@import 'main';

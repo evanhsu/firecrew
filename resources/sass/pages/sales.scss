@@ -1,3 +1,5 @@
+@use '../variables' as *;
+
 $header-min-height: 80%;
 $header-text-min-height: 250px;
 $section-min-height: 400px;
@@ -78,14 +80,9 @@ $section-min-height: 400px;
 		}
 	}
 
-	.features-section {
-		// background: #0000ff;
-
-	}
-
 	.sign-up-section {
 		background: #555555;
-		min-height: $section-min-height / 2;
+		min-height: calc($section-min-height / 2);
 		display: flex;
 		align-items: center;
 
