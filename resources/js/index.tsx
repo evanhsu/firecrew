@@ -10,7 +10,7 @@ import { MantineProvider } from '@mantine/core';
 import { applyMiddleware, compose, createStore } from 'redux';
 import { Provider } from 'react-redux';
 import thunkMiddleware from 'redux-thunk';
-import { RouterProvider } from 'react-router-dom';
+import { RouterProvider } from 'react-router/dom';
 import { fromJS } from 'immutable';
 import rootReducer from './reducers';
 import router from './routes';
