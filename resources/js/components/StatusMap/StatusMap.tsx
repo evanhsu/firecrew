@@ -1,41 +1,43 @@
-import { Group, Image, Text } from '@mantine/core';
-import { useState } from 'react';
-import { PushUpDrawer } from './Drawer';
-import { Map } from './Map';
+import { useMemo, useRef, useState } from 'react';
+import { APP_HEADER_HEIGHT } from '../../layout/AppHeader';
+import { AircraftDetailsDrawer } from './AircraftDetailsDrawer';
+import { HelicopterProps } from './Helicopter';
+import { Map, StatusMapHandle } from './Map';
+import { useHelicopterData } from './hooks/useHelicopterData';
 
 export const StatusMap = () => {
-    const wasDrawerPreviouslyClosed =
-        localStorage.getItem('instructionsDismissed') === '1';
-    const [isDrawerOpen, setIsDrawerOpen] = useState(
-        !wasDrawerPreviouslyClosed
+    const { helicopters } = useHelicopterData();
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const mapRef = useRef<StatusMapHandle>(null);
+
+    const selectedHelicopter = useMemo(
+        () => helicopters.find((h) => h.id === selectedId) ?? null,
+        [helicopters, selectedId]
     );
 
-    const handleDrawerToggle = () => {
-        localStorage.setItem('instructionsDismissed', '1');
-        setIsDrawerOpen(!isDrawerOpen);
+    const handleSelect = (helicopter: HelicopterProps) => {
+        setSelectedId(helicopter.id);
+    };
+
+    const handleClearSelection = () => {
+        setSelectedId(null);
     };
 
     return (
-        <>
-            <Map />
-            <PushUpDrawer
-                open={isDrawerOpen}
-                toggleDrawerOpen={handleDrawerToggle}
-            >
-                <Group gap="sm" wrap="nowrap">
-                    <Image
-                        src="/images/symbols/rappelhelicopter-fresh.png"
-                        alt="Rappel helicopter"
-                        w={32}
-                        h={32}
-                        fit="contain"
-                    />
-                    <Text size="md">
-                        Click on a helicopter to see its IA Range and additional
-                        details
-                    </Text>
-                </Group>
-            </PushUpDrawer>
-        </>
+        <div style={{ height: `calc(100vh - ${APP_HEADER_HEIGHT}px)` }}>
+            <Map
+                ref={mapRef}
+                helicopters={helicopters}
+                selectedId={selectedId}
+                onSelect={handleSelect}
+                onClearSelection={handleClearSelection}
+            />
+            <AircraftDetailsDrawer
+                helicopter={selectedHelicopter}
+                opened={selectedHelicopter !== null}
+                onClose={handleClearSelection}
+                onZoomToRange={() => mapRef.current?.fitToSelectedRange()}
+            />
+        </div>
     );
 };
