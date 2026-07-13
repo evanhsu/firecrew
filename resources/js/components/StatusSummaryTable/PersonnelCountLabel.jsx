@@ -1,6 +1,6 @@
 import { Badge } from '@mantine/core';
-import { PersonSimpleIcon as PersonIcon } from '@phosphor-icons/react/dist/csr/PersonSimple';
 import PropTypes from 'prop-types';
+import { FlightHelmetIcon } from '../FlightHelmetIcon';
 
 const ICON_SIZE_BY_BADGE = {
     xs: 12,
@@ -13,11 +13,11 @@ const ICON_SIZE_BY_BADGE = {
 /**
  * Tag-style label for rappel personnel counts.
  */
-export function PersonnelCountLabel({ count, size = 'sm', ...badgeProps }) {
+export function PersonnelCountLabel({ count, size = 'lg', ...badgeProps }) {
     const value = Number.parseInt(count, 10);
     const safeCount = Number.isNaN(value) ? 0 : value;
     const iconSize = ICON_SIZE_BY_BADGE[size] ?? ICON_SIZE_BY_BADGE.sm;
-    const unit = safeCount === 1 ? 'HRAP' : 'HRAPS';
+    const unit = safeCount === 1 ? 'person' : 'people';
 
     return (
         <Badge
@@ -27,8 +27,19 @@ export function PersonnelCountLabel({ count, size = 'sm', ...badgeProps }) {
             size={size}
             aria-label={`${safeCount} ${unit}`}
             leftSection={
-                <PersonIcon size={iconSize} weight="bold" aria-hidden />
+                <FlightHelmetIcon size={iconSize} weight="bold" aria-hidden />
             }
+            bd="2px solid var(--badge-color)"
+            styles={{
+                root: {
+                    '--badge-border-width': '2px',
+                },
+                label: {
+                    minWidth: '2ch',
+                    textAlign: 'center',
+                    fontVariantNumeric: 'tabular-nums',
+                },
+            }}
             {...badgeProps}
         >
             {safeCount}

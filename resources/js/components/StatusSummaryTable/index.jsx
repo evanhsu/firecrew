@@ -1,6 +1,5 @@
 import {
     Anchor,
-    Badge,
     Box,
     Collapse,
     Stack,
@@ -16,15 +15,16 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import DutyOfficer from './DutyOfficer';
+import NeedsUpdateLabel from './NeedsUpdateLabel';
 import PersonnelCountLabel from './PersonnelCountLabel';
 import { isCrewStale } from './styles';
 import Timestamp from './Timestamp';
 
 /** Shared column template so header + collapsed rows stay aligned. */
 const OVERVIEW_GRID_COLUMNS = {
-    base: '14px minmax(0, 1fr) 4.5rem',
-    sm: '14px minmax(9rem, 1.5fr) 4.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 6.75rem',
-    md: '14px minmax(9rem, 1.4fr) 4.5rem minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) 6.75rem',
+    base: '14px minmax(0, 1fr) auto',
+    sm: '14px minmax(9rem, 1.5fr) 4.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 2.5rem',
+    md: '14px minmax(9rem, 1.4fr) 4.5rem minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) 2.5rem',
 };
 
 const overviewGridStyle = (breakpoint) => ({
@@ -461,11 +461,7 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
         ? 'var(--mantine-color-blue-0)'
         : 'var(--mantine-color-body)';
 
-    const statusBadge = stale ? (
-        <Badge color="yellow" variant="light" radius="sm">
-            Needs update
-        </Badge>
-    ) : null;
+    const statusBadge = stale ? <NeedsUpdateLabel /> : null;
 
     return (
         <Paper
@@ -513,7 +509,12 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                             {overview.location}
                         </Text>
                     </Box>
-                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
+                    <Group gap={6} wrap="nowrap" justify="flex-end">
+                        {statusBadge}
+                        <PersonnelCountLabel
+                            count={overview.totalStaffing || 0}
+                        />
+                    </Group>
                 </Box>
 
                 {/* Tablet overview */}
@@ -527,7 +528,7 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                         {overview.identifiers.join(' · ') || '—'}
                     </OverviewCell>
                     <OverviewCell>{overview.location}</OverviewCell>
-                    <Box>{statusBadge}</Box>
+                    <Box style={{ justifySelf: 'end' }}>{statusBadge}</Box>
                 </Box>
 
                 {/* Desktop overview */}
@@ -542,7 +543,7 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                     </OverviewCell>
                     <OverviewCell>{overview.location}</OverviewCell>
                     <OverviewCell>{overview.assignment}</OverviewCell>
-                    <Box>{statusBadge}</Box>
+                    <Box style={{ justifySelf: 'end' }}>{statusBadge}</Box>
                 </Box>
             </UnstyledButton>
 
@@ -556,45 +557,28 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                     }}
                 >
                     <Stack gap="md">
-                        <Group
-                            justify="space-between"
-                            align="flex-start"
-                            gap="md"
-                            wrap="wrap"
-                        >
-                            <Stack gap={6} style={{ flex: 1, minWidth: 180 }}>
-                                {phone && (
-                                    <Anchor
-                                        href={`tel:${phone}`}
-                                        size="sm"
-                                        onClick={(event) =>
-                                            event.stopPropagation()
-                                        }
-                                    >
-                                        {phone}
-                                    </Anchor>
-                                )}
-                                <DutyOfficer
-                                    dutyOfficer={crewRow.get(
-                                        'status',
-                                        new Map()
-                                    )}
-                                />
-                                <Timestamp
-                                    timestamp={crewRow.get('updated_at')}
-                                />
-                            </Stack>
-                            {stale && (
-                                <Badge
-                                    color="yellow"
-                                    variant="light"
-                                    radius="sm"
-                                    hiddenFrom="sm"
+                        <Stack gap={6} style={{ flex: 1, minWidth: 180 }}>
+                            {phone && (
+                                <Anchor
+                                    href={`tel:${phone}`}
+                                    size="sm"
+                                    onClick={(event) =>
+                                        event.stopPropagation()
+                                    }
                                 >
-                                    Needs update
-                                </Badge>
+                                    {phone}
+                                </Anchor>
                             )}
-                        </Group>
+                            <DutyOfficer
+                                dutyOfficer={crewRow.get(
+                                    'status',
+                                    new Map()
+                                )}
+                            />
+                            <Timestamp
+                                timestamp={crewRow.get('updated_at')}
+                            />
+                        </Stack>
 
                         <Stack gap="sm">
                             {resources.size === 0 ? (
