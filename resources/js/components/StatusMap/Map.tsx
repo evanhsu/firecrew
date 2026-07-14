@@ -1,11 +1,11 @@
 import {
     buildResponseRingGeoJSON,
-    getHelicopterIconUrl,
     getRangeStatuteMiles,
     getResponseRingColor,
     HelicopterProps,
     isHelicopterFresh,
 } from './Helicopter';
+import { HelicopterIcon } from './HelicopterIcon';
 import {
     DESKTOP_DRAWER_WIDTH_PX,
     MOBILE_DRAWER_HEIGHT_VH,
@@ -215,15 +215,12 @@ const MapView = forwardRef<StatusMapHandle, StatusMapViewProps>(
                                         position: 'relative',
                                     }}
                                 >
-                                    <img
-                                        src={getHelicopterIconUrl(
-                                            helicopter.updatedAt
-                                        )}
+                                    <HelicopterIcon
+                                        fresh={fresh}
                                         alt={helicopter.tailnumber}
                                         width={65}
                                         height={65}
                                         style={{
-                                            display: 'block',
                                             filter: selected
                                                 ? 'drop-shadow(0 0 4px rgba(30, 64, 175, 0.9))'
                                                 : undefined,
