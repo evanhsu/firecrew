@@ -29,7 +29,8 @@ const OVERVIEW_GRID_COLUMNS = {
 
 const overviewGridStyle = (breakpoint) => ({
     display: 'grid',
-    gridTemplateColumns: OVERVIEW_GRID_COLUMNS[breakpoint] || OVERVIEW_GRID_COLUMNS.base,
+    gridTemplateColumns:
+        OVERVIEW_GRID_COLUMNS[breakpoint] || OVERVIEW_GRID_COLUMNS.base,
     alignItems: 'center',
     columnGap: 'var(--mantine-spacing-md)',
     width: '100%',
@@ -343,7 +344,9 @@ const HelicopterCard = ({ resource }) => {
                 <Field label="Spotter">
                     {hasSpotter ? (
                         <Stack gap={2}>
-                            {managerName && <Text size="sm">{managerName}</Text>}
+                            {managerName && (
+                                <Text size="sm">{managerName}</Text>
+                            )}
                             {managerPhone && (
                                 <Anchor
                                     href={`tel:${managerPhone}`}
@@ -405,7 +408,13 @@ ExpandIcon.propTypes = {
 const OverviewHeader = () => (
     <>
         <Box px="md" pb={4} hiddenFrom="sm" />
-        <Box px="md" pb={4} visibleFrom="sm" hiddenFrom="md" style={overviewGridStyle('sm')}>
+        <Box
+            px="md"
+            pb={4}
+            visibleFrom="sm"
+            hiddenFrom="md"
+            style={overviewGridStyle('sm')}
+        >
             <Box />
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                 Crew
@@ -458,7 +467,9 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
     const phone = crewRow.get('phone');
 
     const backgroundColor = isExpanded
-        ? 'var(--mantine-color-blue-0)'
+        ? stale
+            ? 'var(--mantine-color-yellow-0)'
+            : 'var(--mantine-color-blue-0)'
         : 'var(--mantine-color-body)';
 
     const statusBadge = stale ? <NeedsUpdateLabel /> : null;
@@ -470,16 +481,14 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
             radius="md"
             style={{
                 backgroundColor,
-                borderColor: isExpanded
-                    ? 'var(--mantine-color-blue-3)'
-                    : 'var(--mantine-color-gray-3)',
+                borderColor: stale
+                    ? 'var(--mantine-color-yellow-6)'
+                    : 'var(--mantine-color-blue-3)',
                 // Always use a 4px left border so columns stay aligned across rows
                 borderLeftWidth: 4,
-                borderLeftColor: isExpanded
-                    ? 'var(--mantine-color-blue-5)'
-                    : stale
-                      ? 'var(--mantine-color-yellow-6)'
-                      : 'var(--mantine-color-gray-3)',
+                borderLeftColor: stale
+                    ? 'var(--mantine-color-yellow-6)'
+                    : 'var(--mantine-color-blue-3)',
                 transition:
                     'background-color 120ms ease, border-color 120ms ease',
                 overflow: 'hidden',
@@ -504,7 +513,8 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                             {crewRow.get('name')}
                         </Text>
                         <Text size="xs" c="dimmed" truncate="end">
-                            {overview.identifiers.join(' · ') || 'No helicopter'}
+                            {overview.identifiers.join(' · ') ||
+                                'No helicopter'}
                             {' · '}
                             {overview.location}
                         </Text>
@@ -518,7 +528,11 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                 </Box>
 
                 {/* Tablet overview */}
-                <Box visibleFrom="sm" hiddenFrom="md" style={overviewGridStyle('sm')}>
+                <Box
+                    visibleFrom="sm"
+                    hiddenFrom="md"
+                    style={overviewGridStyle('sm')}
+                >
                     <ExpandIcon expanded={isExpanded} />
                     <Text fw={700} size="sm" truncate="end">
                         {crewRow.get('name')}
@@ -562,22 +576,15 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                                 <Anchor
                                     href={`tel:${phone}`}
                                     size="sm"
-                                    onClick={(event) =>
-                                        event.stopPropagation()
-                                    }
+                                    onClick={(event) => event.stopPropagation()}
                                 >
                                     {phone}
                                 </Anchor>
                             )}
                             <DutyOfficer
-                                dutyOfficer={crewRow.get(
-                                    'status',
-                                    new Map()
-                                )}
+                                dutyOfficer={crewRow.get('status', new Map())}
                             />
-                            <Timestamp
-                                timestamp={crewRow.get('updated_at')}
-                            />
+                            <Timestamp timestamp={crewRow.get('updated_at')} />
                         </Stack>
 
                         <Stack gap="sm">
@@ -617,8 +624,7 @@ class StatusSummaryTable extends Component {
 
     handleCrewToggle = (crewId) => () => {
         this.setState((prevState) => ({
-            expandedCrewId:
-                prevState.expandedCrewId === crewId ? null : crewId,
+            expandedCrewId: prevState.expandedCrewId === crewId ? null : crewId,
         }));
     };
 
