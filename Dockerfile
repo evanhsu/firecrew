@@ -9,7 +9,7 @@ RUN ["corepack", "enable"]
 RUN ["yarn", "install"]
 
 # Build the Laravel js frontend.
-COPY ./vite.config.js ./tsconfig.json ./
+COPY ./vite.config.js ./tsconfig.json ./postcss.config.cjs ./
 COPY ./resources ./resources
 COPY ./.env.production ./.env
 RUN ["yarn", "build"]
@@ -18,7 +18,7 @@ RUN ["yarn", "build"]
 # The webdevops image has all the php extensions + composer installed
 # It's convenient for the build stage and can be used as the final image if image size isn't a concern.
 # The image from this stage is about ~850MB
-FROM webdevops/php-nginx:8.3-alpine AS php-build
+FROM webdevops/php-nginx:8.4-alpine AS php-build
 
 # Install Laravel framework system requirements (https://laravel.com/docs/8.x/deployment#optimizing-configuration-loading)
 RUN apk add oniguruma-dev postgresql-dev libxml2-dev
@@ -49,21 +49,22 @@ RUN php artisan view:cache
 
 
 # Copy everything to a much smaller php-nginx container (~240MB)
-FROM trafex/php-nginx:3.6.0
+# Pin 3.10.0 for PHP 8.4 (3.11+ ships PHP 8.5)
+FROM trafex/php-nginx:3.10.0
 
 USER root
 
 # Install Laravel framework system requirements (https://laravel.com/docs/8.x/deployment#server-requirements)
 RUN apk add \
         libxml2-dev \
-        php83-tokenizer \
-        php83-mbstring \
-        php83-pdo_mysql
+        php84-tokenizer \
+        php84-mbstring \
+        php84-pdo_mysql
         # postgresql-dev \
-        # php83-pdo_pgsql
+        # php84-pdo_pgsql
 
 COPY ./nginx.conf /etc/nginx/nginx.conf
-COPY ./php.ini /etc/php83/conf.d/settings.ini
+COPY ./php.ini /etc/php84/conf.d/settings.ini
 
 WORKDIR /var/www/html
 

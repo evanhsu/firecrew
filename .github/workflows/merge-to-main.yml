@@ -35,7 +35,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.4"
           extensions: mbstring, pdo_mysql
           coverage: none
 
@@ -45,6 +45,7 @@ jobs:
       - name: Run tests
         run: php artisan test
         env:
+          APP_KEY: base64:aUPKkotNRs3KxlIYKREkFHI5cO2bzWiIoqt7uvdyrWI=
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
