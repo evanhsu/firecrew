@@ -3,6 +3,7 @@ import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
 import MapView from '@arcgis/core/views/MapView';
 import WebMap from '@arcgis/core/WebMap';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ANNOUNCEMENT } from '../AnnouncementBanner';
 import { Helicopter } from './Helicopter';
 import { OnDataCallback, useHelicopterData } from './hooks/useHelicopterData';
 import { logger } from '../../helpers/logger';
@@ -257,7 +258,16 @@ const Map = ({ isDrawerOpen }: MapProps) => {
         }
     }, []);
 
-    const height = isDrawerOpen ? 'calc(100vh - 251px)' : 'calc(100vh - 51px)'; // 51px is the height of the top nav
+    const navHeightPx = 51; // height of the top nav
+    const drawerHeightPx = 200;
+    const bannerHeightPx =
+        ANNOUNCEMENT.enabled && ANNOUNCEMENT.message
+            ? ANNOUNCEMENT.heightPx
+            : 0;
+    const chromeHeightPx = navHeightPx + bannerHeightPx;
+    const height = isDrawerOpen
+        ? `calc(100vh - ${chromeHeightPx + drawerHeightPx}px)`
+        : `calc(100vh - ${chromeHeightPx}px)`;
     return (
         <div style={{ height }}>
             {/* <button
