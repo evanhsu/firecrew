@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
@@ -11,10 +12,14 @@ class Handler extends ExceptionHandler
     /**
      * A list of the exception types that are not reported.
      *
+     * Note: Laravel 13 uses the framework handler via bootstrap/app.php
+     * withExceptions(). Keep these in sync with dontReport there.
+     *
      * @var array
      */
     protected $dontReport = [
         NotFoundHttpException::class,
+        MethodNotAllowedHttpException::class,
     ];
 
     /**
