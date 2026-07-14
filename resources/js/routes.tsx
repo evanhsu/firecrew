@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Outlet } from 'react-router';
+import { AnnouncementBanner } from './components/AnnouncementBanner';
 import StatusSummary from './containers/StatusSummary';
 
 const StatusMap = lazy(() =>
@@ -8,22 +9,34 @@ const StatusMap = lazy(() =>
     }))
 );
 
+const StatusPagesLayout = () => (
+    <>
+        <AnnouncementBanner />
+        <Outlet />
+    </>
+);
+
 const router = createBrowserRouter([
     {
-        path: '/map',
-        element: (
-            <Suspense fallback={null}>
-                <StatusMap />
-            </Suspense>
-        ),
-    },
-    {
-        path: '/summary',
-        element: <StatusSummary />,
-    },
-    {
-        path: '/',
-        element: <StatusSummary />,
+        element: <StatusPagesLayout />,
+        children: [
+            {
+                path: 'map',
+                element: (
+                    <Suspense fallback={null}>
+                        <StatusMap />
+                    </Suspense>
+                ),
+            },
+            {
+                path: 'summary',
+                element: <StatusSummary />,
+            },
+            {
+                path: '/',
+                element: <StatusSummary />,
+            },
+        ],
     },
 ]);
 

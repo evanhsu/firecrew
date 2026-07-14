@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { ANNOUNCEMENT } from '../AnnouncementBanner';
 import { APP_HEADER_HEIGHT } from '../../layout/AppHeader';
 import { AircraftDetailsDrawer } from './AircraftDetailsDrawer';
 import { HelicopterProps } from './Helicopter';
@@ -23,8 +24,14 @@ export const StatusMap = () => {
         setSelectedId(null);
     };
 
+    const bannerHeightPx =
+        ANNOUNCEMENT.enabled && ANNOUNCEMENT.message
+            ? ANNOUNCEMENT.heightPx
+            : 0;
+    const chromeHeightPx = APP_HEADER_HEIGHT + bannerHeightPx;
+
     return (
-        <div style={{ height: `calc(100vh - ${APP_HEADER_HEIGHT}px)` }}>
+        <div style={{ height: `calc(100vh - ${chromeHeightPx}px)` }}>
             <Map
                 ref={mapRef}
                 helicopters={helicopters}
