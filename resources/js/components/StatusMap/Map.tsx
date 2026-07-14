@@ -12,12 +12,7 @@ import {
 } from './detailsLayout';
 import { useMediaQuery } from '@mantine/hooks';
 import type { Feature, Polygon } from 'geojson';
-import {
-    forwardRef,
-    useImperativeHandle,
-    useMemo,
-    useRef,
-} from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import Map, {
     Layer,
     MapLayerMouseEvent,
@@ -25,14 +20,41 @@ import Map, {
     Marker,
     Source,
 } from 'react-map-gl/maplibre';
+import type { Map as MaplibreMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 const DEFAULT_MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+
+/** OpenFreeMap liberty layer used for state outlines (admin_level 4). */
+const STATE_BOUNDARY_LAYER_ID = 'boundary_3';
 
 const INITIAL_VIEW_STATE = {
     longitude: -113,
     latitude: 43,
     zoom: 6,
+};
+
+/**
+ * Make the state boundary outlines more prominent on the map
+ */
+const styleStateBoundaries = (map: MaplibreMap) => {
+    if (!map.getLayer(STATE_BOUNDARY_LAYER_ID)) {
+        return;
+    }
+
+    map.setLayerZoomRange(STATE_BOUNDARY_LAYER_ID, 0, 24);
+    map.setFilter(STATE_BOUNDARY_LAYER_ID, [
+        'all',
+        ['==', ['get', 'admin_level'], 4],
+        ['!=', ['get', 'maritime'], 1],
+        ['!=', ['get', 'disputed'], 1],
+        ['!', ['has', 'claimed_by']],
+    ]);
+    map.setPaintProperty(STATE_BOUNDARY_LAYER_ID, 'line-color', '#000000');
+    map.setPaintProperty(STATE_BOUNDARY_LAYER_ID, 'line-width', 2);
+    // Solid stroke (liberty defaults this layer to a dash).
+    map.setPaintProperty(STATE_BOUNDARY_LAYER_ID, 'line-dasharray', undefined);
+    map.setPaintProperty(STATE_BOUNDARY_LAYER_ID, 'line-opacity', 1);
 };
 
 const bboxFromPolygon = (
@@ -148,6 +170,13 @@ const MapView = forwardRef<StatusMapHandle, StatusMapViewProps>(
         const mapStyle =
             import.meta.env.VITE_MAP_STYLE_URL || DEFAULT_MAP_STYLE;
 
+        const handleMapLoad = () => {
+            const map = mapRef.current?.getMap();
+            if (map) {
+                styleStateBoundaries(map);
+            }
+        };
+
         const handleMapClick = (_event: MapLayerMouseEvent) => {
             if (Date.now() < suppressMapClickUntilRef.current) {
                 return;
@@ -167,6 +196,7 @@ const MapView = forwardRef<StatusMapHandle, StatusMapViewProps>(
                     initialViewState={INITIAL_VIEW_STATE}
                     mapStyle={mapStyle}
                     style={{ width: '100%', height: '100%' }}
+                    onLoad={handleMapLoad}
                     onClick={handleMapClick}
                 >
                     {responseRing && (
@@ -263,9 +293,7 @@ const MapView = forwardRef<StatusMapHandle, StatusMapViewProps>(
                                     fontSize: 16,
                                     fontWeight: 700,
                                     fontFamily: 'sans-serif',
-                                    color: responseRing.fresh
-                                        ? '#000'
-                                        : '#888',
+                                    color: responseRing.fresh ? '#000' : '#888',
                                     whiteSpace: 'nowrap',
                                     textShadow: '0 0 4px #fff, 0 0 4px #fff',
                                 }}
