@@ -466,11 +466,10 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
     const overview = getCrewOverview(crewRow);
     const phone = crewRow.get('phone');
 
-    const backgroundColor = isExpanded
-        ? stale
-            ? 'var(--mantine-color-yellow-0)'
-            : 'var(--mantine-color-blue-0)'
-        : 'var(--mantine-color-body)';
+    const backgroundColor = 'var(--mantine-color-body)';
+    // const backgroundColor = isExpanded
+    //     ? 'var(--mantine-color-blue-0)'
+    //     : 'var(--mantine-color-body)';
 
     const statusBadge = stale ? <NeedsUpdateLabel /> : null;
 
