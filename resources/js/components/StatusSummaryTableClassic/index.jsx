@@ -249,17 +249,34 @@ const boostersIn = (resource) => {
     return '';
 };
 
+const parseStaffedIncidentsJson = (value) => {
+    if (!value) {
+        return null;
+    }
+
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : null;
+    } catch {
+        // comments1 is sometimes free-form text instead of JSON
+        return null;
+    }
+};
+
 const StaffedIncidentList = ({ jsonString }) => {
     if (!jsonString) {
         return null;
     }
-    let incidents = [];
-    try {
-        incidents = JSON.parse(jsonString);
-    } catch (e) {
-        console.debug('Failed to parse staffed incidents JSON', e);
+
+    const incidents = parseStaffedIncidentsJson(jsonString);
+    if (!incidents) {
+        return <span>{jsonString}</span>;
+    }
+
+    if (incidents.length === 0) {
         return null;
     }
+
     const incidentRows = incidents.map((incident, index) => {
         const personnel = incident.personnel || '';
         const incidentName = incident.incident_name || '';
