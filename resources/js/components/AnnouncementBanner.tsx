@@ -3,7 +3,7 @@
  * Edit `message` below, or set `enabled` to false to hide the banner.
  */
 export const ANNOUNCEMENT = {
-    enabled: true,
+    enabled: false,
     message: '📢 Site updates are coming on Wednesday, July 15th 📢',
     /** Approximate rendered height; keep in sync with banner styles for map layout. */
     heightPx: 64,

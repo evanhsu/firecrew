@@ -1,7 +1,7 @@
 export type LogLevel = 'debug' | 'info' | 'error';
 export class LoggerConstructor {
     public debug(...data: any[]) {
-        if (process.env.NODE_ENV !== 'production') {
+        if (!import.meta.env.PROD) {
             this.log('debug', ...data);
         }
     }

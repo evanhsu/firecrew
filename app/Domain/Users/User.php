@@ -4,14 +4,13 @@ namespace App\Domain\Users;
 
 use App\Domain\Crews\Crew;
 use App\Domain\Statuses\ResourceStatus;
-use Illuminate\Http\Request;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Passport\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Http\Request;
 
 class User extends Authenticatable
 {
-    use Notifiable, HasApiTokens;
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.

@@ -1,7 +1,5 @@
 @extends('../layouts.status_update_layout')
 
-
-
 @section('form')
     <h1>Status Update</h1>
 
@@ -43,13 +41,4 @@
         @endforeach
 
     </div>
-@endsection
-
-@section('scripts-postload')
-@parent
-<script>
-    $(function () {
-      $('[data-toggle="popover"]').popover()
-    })
-</script>
 @endsection

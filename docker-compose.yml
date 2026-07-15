@@ -1,14 +1,15 @@
 services:
     laravel.test:
         build:
-            context: ./docker/8.3
+            context: ./docker/8.4
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
-                XDEBUG: '${SAIL_DEBUG}'
-        image: sail-8.3/app
+                NODE_VERSION: '22'
+        image: sail-8.4/app
         ports:
             - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5180}:${VITE_PORT:-5180}'
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1

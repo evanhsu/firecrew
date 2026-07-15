@@ -1,288 +1,311 @@
-import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
-import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer';
-import MapView from '@arcgis/core/views/MapView';
-import WebMap from '@arcgis/core/WebMap';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ANNOUNCEMENT } from '../AnnouncementBanner';
-import { Helicopter } from './Helicopter';
-import { OnDataCallback, useHelicopterData } from './hooks/useHelicopterData';
-import { logger } from '../../helpers/logger';
+import {
+    buildResponseRingGeoJSON,
+    getRangeStatuteMiles,
+    getResponseRingColor,
+    HelicopterProps,
+    isHelicopterFresh,
+} from './Helicopter';
+import { HelicopterIcon } from './HelicopterIcon';
+import {
+    DESKTOP_DRAWER_WIDTH_PX,
+    MOBILE_DRAWER_HEIGHT_VH,
+} from './detailsLayout';
+import { useMediaQuery } from '@mantine/hooks';
+import type { Feature, Polygon } from 'geojson';
+import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
+import Map, {
+    Layer,
+    MapLayerMouseEvent,
+    MapRef,
+    Marker,
+    Source,
+} from 'react-map-gl/maplibre';
+import type { Map as MaplibreMap } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+
+const DEFAULT_MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+
+/** OpenFreeMap liberty layer used for state outlines (admin_level 4). */
+const STATE_BOUNDARY_LAYER_ID = 'boundary_3';
+
+const INITIAL_VIEW_STATE = {
+    longitude: -113,
+    latitude: 43,
+    zoom: 6,
+};
 
 /**
- * Get a layer (by its ID) from a WebMap
+ * Make the state boundary outlines more prominent on the map
  */
-const layer = <T extends __esri.Layer = __esri.Layer>(
-    layerId: string,
-    map: WebMap | null
-): T => {
-    if (map) {
-        const layer = map.allLayers.find((layer) => layer.id === layerId);
-        if (layer) {
-            // @ts-expect-error
-            return layer;
-        }
-        throw new Error(`Map layer "${layerId}" doesn't exist`);
-    } else {
-        throw new Error("The map hasn't finished loading yet");
+const styleStateBoundaries = (map: MaplibreMap) => {
+    if (!map.getLayer(STATE_BOUNDARY_LAYER_ID)) {
+        return;
     }
+
+    map.setLayerZoomRange(STATE_BOUNDARY_LAYER_ID, 0, 24);
+    map.setFilter(STATE_BOUNDARY_LAYER_ID, [
+        'all',
+        ['==', ['get', 'admin_level'], 4],
+        ['!=', ['get', 'maritime'], 1],
+        ['!=', ['get', 'disputed'], 1],
+        ['!', ['has', 'claimed_by']],
+    ]);
+    map.setPaintProperty(STATE_BOUNDARY_LAYER_ID, 'line-color', '#000000');
+    map.setPaintProperty(STATE_BOUNDARY_LAYER_ID, 'line-width', 2);
+    // Solid stroke (liberty defaults this layer to a dash).
+    map.setPaintProperty(STATE_BOUNDARY_LAYER_ID, 'line-dasharray', undefined);
+    map.setPaintProperty(STATE_BOUNDARY_LAYER_ID, 'line-opacity', 1);
 };
 
-const createHelicopterDataHandler: (webMap: WebMap | null) => OnDataCallback =
-    (webMap) => async (helicopters) => {
-        logger.debug('Clearing all graphics from helicopter-graphics-layer');
-        layer<GraphicsLayer>('helicopter-graphics-layer', webMap).removeAll();
+const bboxFromPolygon = (
+    feature: Feature<Polygon>
+): [[number, number], [number, number]] => {
+    let minLng = Infinity;
+    let minLat = Infinity;
+    let maxLng = -Infinity;
+    let maxLat = -Infinity;
 
-        logger.debug('Clearing all graphics from response-ring-graphics-layer');
-        layer<GraphicsLayer>(
-            'response-ring-graphics-layer',
-            webMap
-        ).removeAll();
+    for (const [lng, lat] of feature.geometry.coordinates[0]) {
+        minLng = Math.min(minLng, lng);
+        minLat = Math.min(minLat, lat);
+        maxLng = Math.max(maxLng, lng);
+        maxLat = Math.max(maxLat, lat);
+    }
 
-        helicopters.forEach((inputHelicopter) => {
-            const h = Helicopter({
-                id: inputHelicopter.id,
-                tailnumber: inputHelicopter.tailnumber,
-                makeModel: inputHelicopter.makeModel,
-                latitude: inputHelicopter.latitude,
-                longitude: inputHelicopter.longitude,
-                updatedAt: inputHelicopter.updatedAt,
-                popupContent: inputHelicopter.popupContent,
-                staffingCategory1: inputHelicopter.staffingCategory1,
-                staffingValue1: inputHelicopter.staffingValue1,
-                crewName: inputHelicopter.crewName,
-                assignedFireName: inputHelicopter.assignedFireName,
-                managerName: inputHelicopter.managerName,
-                managerPhone: inputHelicopter.managerPhone,
-            });
+    return [
+        [minLng, minLat],
+        [maxLng, maxLat],
+    ];
+};
 
-            try {
-                // layer<FeatureLayer>('helicopter-layer').applyEdits({
-                //     addFeatures: [h.mapGraphic, h.responseRingGraphic],
-                // });
-                logger.debug(
-                    `adding helicopter ${inputHelicopter.tailnumber} to graphics layer`
-                );
-                layer<GraphicsLayer>(
-                    'helicopter-graphics-layer',
-                    webMap
-                ).addMany([h.helicopterGraphic, h.helicopterLabel]);
-                layer<GraphicsLayer>(
-                    'response-ring-graphics-layer',
-                    webMap
-                ).addMany([h.responseRingGraphic, h.responseRingGraphicLabel]);
-            } catch (e) {
-                console.error(e);
+export type StatusMapHandle = {
+    /** Zoom so the selected aircraft's IA range circle fills the visible map area. */
+    fitToSelectedRange: () => void;
+};
+
+export type StatusMapViewProps = {
+    helicopters: HelicopterProps[];
+    selectedId: string | null;
+    onSelect: (helicopter: HelicopterProps) => void;
+    onClearSelection: () => void;
+};
+
+const MapView = forwardRef<StatusMapHandle, StatusMapViewProps>(
+    function MapView(
+        { helicopters, selectedId, onSelect, onClearSelection },
+        ref
+    ) {
+        const mapRef = useRef<MapRef>(null);
+        // Touch taps on markers often also fire a map click; ignore that ghost click.
+        const suppressMapClickUntilRef = useRef(0);
+        const isDesktop = useMediaQuery('(min-width: 62em)');
+
+        const selectedHelicopter = useMemo(
+            () => helicopters.find((h) => h.id === selectedId) ?? null,
+            [helicopters, selectedId]
+        );
+
+        const responseRing = useMemo(() => {
+            if (!selectedHelicopter) {
+                return null;
             }
-        });
-    };
+            const range = getRangeStatuteMiles(selectedHelicopter.makeModel);
+            if (!range) {
+                return null;
+            }
+            return {
+                geojson: buildResponseRingGeoJSON(
+                    selectedHelicopter.longitude,
+                    selectedHelicopter.latitude,
+                    range
+                ),
+                color: getResponseRingColor(
+                    selectedHelicopter.updatedAt,
+                    range
+                ),
+                label: `IA Range: ${range.toFixed(0)} mi`,
+                fresh: isHelicopterFresh(selectedHelicopter.updatedAt),
+            };
+        }, [selectedHelicopter]);
 
-export type MapProps = {
-    isDrawerOpen: boolean;
-};
-const Map = ({ isDrawerOpen }: MapProps) => {
-    const mapDiv = useRef<HTMLDivElement>(null);
-    // This ref is used to guarantee that the WebMap isn't built twice.
-    // Since the WebMap is bound to a DOM element with userRef(), it persists between re-renders
-    // and rendering this component twice results in duplicate maps and layers in the dom.
-    const esriMapAlreadyLoaded = useRef(false);
-
-    // const [position, setPosition] = useState();
-    const [isVisible, setIsVisible] = useState(false);
-    const [webMap, setWebMap] = useState<WebMap | null>(null);
-
-    const handleHelicopterUpdatedEvent = useCallback(
-        createHelicopterDataHandler(webMap),
-        [webMap]
-    );
-
-    let { fetchAndSubscribe } = useHelicopterData(
-        handleHelicopterUpdatedEvent,
-        webMap
-    );
-
-    const stateBoundariesLayer = new FeatureLayer({
-        id: 'census-layer',
-        url: 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/3',
-    });
-
-    const helicopterGraphicsLayer = new GraphicsLayer({
-        id: 'helicopter-graphics-layer',
-    });
-
-    const responseRingGraphicsLayer = new GraphicsLayer({
-        id: 'response-ring-graphics-layer',
-    });
-
-    // Using a "FeatureLayer" is more complex than using a "GraphicsLayer" (like we're currently doing)
-    // but has some additional capabilities. This example isn't fully functional, but I'm leaving it
-    // here as a starting point if I ever decide to switch to a FeatureLayer.
-    // const helicopterPositionFeatureLayer = new FeatureLayer({
-    //     id: 'helicopter-layer',
-    //     popupTemplate: {
-    //         title: '{popupTitle}',
-    //         content: [
-    //             new TextContent({
-    //                 text: '{popupContent}',
-    //             }),
-    //         ],
-    //     },
-    //     source: [
-    //         Helicopter({
-    //             resourceName: 'N000999',
-    //             latitude: position.latitude,
-    //             longitude: position.longitude,
-    //             updatedAt: '2023-01-30 21:30:00',
-    //             popupContent: '<span style="color: blue">hi there</span>',
-    //         }).helicopterGraphic,
-    //     ],
-    //     objectIdField: 'OBJECTID',
-    //     fields: [
-    //         {
-    //             name: 'OBJECTID',
-    //             type: 'oid',
-    //         },
-    //         {
-    //             name: 'popupTitle',
-    //             type: 'string',
-    //         },
-    //         {
-    //             name: 'popupContent',
-    //             type: 'xml',
-    //         },
-    //     ],
-    // });
-
-    useEffect(() => {
-        fetchAndSubscribe();
-    }, [fetchAndSubscribe]);
-
-    const toggleLayerIsVisible = () => {
-        setIsVisible(!isVisible);
-        console.debug(`toggling layer visibility to ${isVisible}`);
-        try {
-            layer('census-layer', webMap).visible = isVisible;
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    useEffect(() => {
-        if (!esriMapAlreadyLoaded.current) {
-            esriMapAlreadyLoaded.current = true;
-            /**
-             * Initialize application
-             */
-            logger.debug('Creating the WebMap...');
-
-            const map = new WebMap({
-                basemap: 'topo-vector',
-                // portalItem: {
-                //     id: "aa1d3f80270146208328cf66d022e09c",
-                // },
-            });
-
-            const view = new MapView({
-                // @ts-expect-error
-                container: mapDiv.current,
-                map: map,
-                center: [-113, 43],
-                zoom: 6,
-            });
-
-            map.add(stateBoundariesLayer);
-            map.add(helicopterGraphicsLayer);
-            map.add(responseRingGraphicsLayer);
-            // webmap.add(helicopterPositionFeatureLayer);
-
-            view.on('click', function (event) {
-                // the hitTest() checks to see if any graphics in the view
-                // intersect the given screen x, y coordinates.
-                // We can pass options to the hitTest() method to specify layers and graphics to include/exclude
-                // from the hitTest
-                view.hitTest(event, {
-                    // Only check to see if the click intersected with a Graphic on this specific layer
-                    include: [helicopterGraphicsLayer],
-                }).then((response) => {
-                    const graphicHits = response.results?.filter(
-                        (hitResult): hitResult is __esri.GraphicHit =>
-                            hitResult.type === 'graphic'
-                        //  && hitResult.graphic.layer === helicopterGraphicsLayer
-                    );
-
-                    // If we clicked away from all helicopters, hide all response rings
-                    if (graphicHits.length === 0) {
-                        // Make the entire responseRing layer invisible (hide all rings)
-                        // const layer = responseRingGraphicsLayer;
-                        // layer.visible = false;
-                        //
-                        // Alternative: make each response ring invisible
-                        // layer.graphics.forEach((graphic) => {
-                        //     graphic.visible = false;
-                        // });
+        useImperativeHandle(
+            ref,
+            () => ({
+                fitToSelectedRange: () => {
+                    if (!responseRing || !mapRef.current) {
+                        return;
                     }
 
-                    graphicHits.forEach((hit) => {
-                        logger.debug(
-                            `Clicked on ${hit.graphic.attributes.OBJECTID}`
+                    const drawerPad = isDesktop
+                        ? DESKTOP_DRAWER_WIDTH_PX
+                        : Math.round(
+                              window.innerHeight * MOBILE_DRAWER_HEIGHT_VH
+                          );
+
+                    mapRef.current.fitBounds(
+                        bboxFromPolygon(responseRing.geojson),
+                        {
+                            padding: isDesktop
+                                ? {
+                                      top: 48,
+                                      bottom: 48,
+                                      left: 48,
+                                      right: drawerPad + 48,
+                                  }
+                                : {
+                                      top: 48,
+                                      bottom: drawerPad + 48,
+                                      left: 24,
+                                      right: 24,
+                                  },
+                            duration: 450,
+                            maxZoom: 9,
+                        }
+                    );
+                },
+            }),
+            [responseRing, isDesktop]
+        );
+
+        const mapStyle =
+            import.meta.env.VITE_MAP_STYLE_URL || DEFAULT_MAP_STYLE;
+
+        const handleMapLoad = () => {
+            const map = mapRef.current?.getMap();
+            if (map) {
+                styleStateBoundaries(map);
+            }
+        };
+
+        const handleMapClick = (_event: MapLayerMouseEvent) => {
+            if (Date.now() < suppressMapClickUntilRef.current) {
+                return;
+            }
+            onClearSelection();
+        };
+
+        const handleMarkerClick = (helicopter: HelicopterProps) => {
+            suppressMapClickUntilRef.current = Date.now() + 400;
+            onSelect(helicopter);
+        };
+
+        return (
+            <div style={{ height: '100%', width: '100%' }}>
+                <Map
+                    ref={mapRef}
+                    initialViewState={INITIAL_VIEW_STATE}
+                    mapStyle={mapStyle}
+                    style={{ width: '100%', height: '100%' }}
+                    onLoad={handleMapLoad}
+                    onClick={handleMapClick}
+                >
+                    {responseRing && (
+                        <Source
+                            id="response-ring"
+                            type="geojson"
+                            data={responseRing.geojson}
+                        >
+                            <Layer
+                                id="response-ring-line"
+                                type="line"
+                                paint={{
+                                    'line-color': responseRing.color,
+                                    'line-width': 3,
+                                    'line-dasharray': [1, 2],
+                                }}
+                            />
+                        </Source>
+                    )}
+
+                    {helicopters.map((helicopter) => {
+                        const fresh = isHelicopterFresh(helicopter.updatedAt);
+                        const selected = helicopter.id === selectedId;
+
+                        return (
+                            <Marker
+                                key={helicopter.id}
+                                longitude={helicopter.longitude}
+                                latitude={helicopter.latitude}
+                                anchor="center"
+                                onClick={(e) => {
+                                    e.originalEvent.stopPropagation();
+                                    e.originalEvent.preventDefault();
+                                    handleMarkerClick(helicopter);
+                                }}
+                                style={{
+                                    cursor: 'pointer',
+                                    zIndex: selected ? 2 : 1,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        position: 'relative',
+                                    }}
+                                >
+                                    <HelicopterIcon
+                                        fresh={fresh}
+                                        alt={helicopter.tailnumber}
+                                        width={65}
+                                        height={65}
+                                        style={{
+                                            filter: selected
+                                                ? 'drop-shadow(0 0 4px rgba(30, 64, 175, 0.9))'
+                                                : undefined,
+                                        }}
+                                    />
+                                    <span
+                                        style={{
+                                            position: 'absolute',
+                                            left: '70%',
+                                            top: 4,
+                                            fontSize: 10,
+                                            fontWeight: 700,
+                                            fontFamily: 'sans-serif',
+                                            color: fresh ? '#000' : '#888',
+                                            whiteSpace: 'nowrap',
+                                            textShadow:
+                                                '0 0 3px #fff, 0 0 3px #fff',
+                                            pointerEvents: 'none',
+                                        }}
+                                    >
+                                        {helicopter.tailnumber}
+                                    </span>
+                                </div>
+                            </Marker>
                         );
-                        const responseRingObjectId = `${hit.graphic.attributes['OBJECTID']}-response-ring`;
-                        const responseRingLabelObjectId = `${hit.graphic.attributes['OBJECTID']}-response-ring-label`;
-                        // const layer = hit.graphic.layer as GraphicsLayer;
-                        const layer = responseRingGraphicsLayer;
+                    })}
 
-                        layer.graphics.forEach((graphic) => {
-                            graphic.visible = [
-                                responseRingObjectId,
-                                responseRingLabelObjectId,
-                            ].includes(graphic.getAttribute('OBJECTID'))
-                                ? !graphic.visible // Toggle the visibility if this graphic was clicked
-                                : graphic.visible; // Leave the visibility unchanged if this graphic was NOT clicked
-                        });
-                        layer.visible = true;
-                        // do something with the graphic
-                    });
-                });
-            });
+                    {responseRing && selectedHelicopter && (
+                        <Marker
+                            longitude={selectedHelicopter.longitude}
+                            latitude={selectedHelicopter.latitude}
+                            anchor="center"
+                            style={{ pointerEvents: 'none' }}
+                        >
+                            <span
+                                style={{
+                                    position: 'relative',
+                                    top: 40,
+                                    left: 40,
+                                    fontSize: 16,
+                                    fontWeight: 700,
+                                    fontFamily: 'sans-serif',
+                                    color: responseRing.fresh ? '#000' : '#888',
+                                    whiteSpace: 'nowrap',
+                                    textShadow: '0 0 4px #fff, 0 0 4px #fff',
+                                }}
+                            >
+                                {responseRing.label}
+                            </span>
+                        </Marker>
+                    )}
+                </Map>
+            </div>
+        );
+    }
+);
 
-            map.when(() => {
-                // if (webmap.bookmarks && webmap.bookmarks.length) {
-                //     logger.debug("Bookmarks: ", webmap.bookmarks.length);
-                // } else {
-                //     logger.debug("No bookmarks in this webmap.");
-                // }
-
-                // The map is now loaded
-                logger.debug(`The Map is loaded: ${map.loaded}`);
-                setWebMap(map);
-            });
-        }
-    }, []);
-
-    const navHeightPx = 51; // height of the top nav
-    const drawerHeightPx = 200;
-    const bannerHeightPx =
-        ANNOUNCEMENT.enabled && ANNOUNCEMENT.message
-            ? ANNOUNCEMENT.heightPx
-            : 0;
-    const chromeHeightPx = navHeightPx + bannerHeightPx;
-    const height = isDrawerOpen
-        ? `calc(100vh - ${chromeHeightPx + drawerHeightPx}px)`
-        : `calc(100vh - ${chromeHeightPx}px)`;
-    return (
-        <div style={{ height }}>
-            {/* <button
-                onClick={toggleLayerIsVisible}
-                style={{ width: 100, height: 40 }}
-            >
-                Toggle
-            </button> */}
-            <div
-                id="map-container"
-                style={{ height: '100%' }}
-                ref={mapDiv}
-            ></div>
-        </div>
-    );
-};
-
-export { Map };
+export { MapView as Map };

@@ -28,10 +28,25 @@ A web app for wildland fire crews to post their location and assignments for nat
 
     etc
 
--   Once the `init` script is done, install the frontend dependencies with yarn and then start up the webpack dev server:
+-   Once the `init` script is done, install the frontend dependencies with yarn and start the Vite dev server:
 
         yarn
         yarn dev
+
+    The Vite dev server runs on port **5180** by default (5173 is often occupied by Cursor).
+    Add these to your `.env` if not already present:
+
+        VITE_PORT=5180
+        VITE_DEV_SERVER_URL=http://localhost:5180
+
+    If you are not running `yarn dev`, the app will use the pre-built assets in `public/build/`
+    (run `yarn build` after frontend changes). Delete `public/hot` if it exists and you are
+    not running the dev server — that file forces the browser to look for Vite instead of
+    the built assets.
+
+-   Create the isolated test database (once per environment):
+
+        ./vendor/bin/sail mysql -e "CREATE DATABASE IF NOT EXISTS firecrew_test; GRANT ALL PRIVILEGES ON firecrew_test.* TO 'sail'@'%'; FLUSH PRIVILEGES;"
 
 -   Now you can start up the backend with Laravel Sail:
 
@@ -101,7 +116,21 @@ Because of the storage limitations of the free-tier container registry,
 
 You'll need to apply the db schema when you first set up the application:
 
-    php artisan db:migrate --force
+    php artisan migrate --force
+
+### Laravel 13 upgrade: inventory removal
+
+Before deploying to production, take a full database backup. The deploy entrypoint runs `php artisan migrate --force`, which includes `drop_inventory_tables` to remove the legacy inventory schema (`items`, `people`, `vips`, `log_entries`, and related tables).
+
+### Running tests
+
+Create the isolated test database once (must run as **root** — `sail mysql` always connects as `sail`):
+
+    docker compose exec mysql mysql -uroot -ppassword -e "CREATE DATABASE IF NOT EXISTS firecrew_test; GRANT ALL PRIVILEGES ON firecrew_test.* TO 'sail'@'%'; FLUSH PRIVILEGES;"
+
+Run the test suite:
+
+    ./vendor/bin/sail test
 
 In a production (kubernetes) environment, you can connect to an application pod like this:
 

@@ -40,14 +40,19 @@ class ResourceStatus extends Model
         'statusable_resource_id',
         'statusable_resource_type',
         'statusable_resource_name',
-        'created_by'
+        'created_by_name',
+        'created_by_id',
     ];
 
     protected static function boot()
     {
         parent::boot();
         self::created(function ($model) {
-            $model->crew()->touch();
+            $crew = $model->crew();
+
+            if ($crew) {
+                $crew->touch();
+            }
         });
     }
 

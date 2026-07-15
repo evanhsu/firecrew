@@ -1,5 +1,4 @@
-import WebMap from '@arcgis/core/WebMap';
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { logger } from '../../../helpers/logger';
 import { HelicopterProps } from '../Helicopter';
 
@@ -23,64 +22,44 @@ const translateHelicopterFromApiSchemaToAppSchema = (
     };
 };
 
-export type OnDataCallback = (data: HelicopterProps[]) => Promise<void>;
-export const useHelicopterData = (
-    onData: OnDataCallback,
-    webMap: WebMap | null
-) => {
+const mergeHelicopterUpdate = (
+    helicopters: HelicopterProps[],
+    updatedHelicopter: HelicopterProps
+): HelicopterProps[] => {
+    const unchanged = helicopters.filter((h) => h.id != updatedHelicopter.id);
+    return [...unchanged, updatedHelicopter];
+};
+
+export const useHelicopterData = () => {
+    const [helicopters, setHelicopters] = useState<HelicopterProps[]>([]);
+    const helicoptersRef = useRef<HelicopterProps[]>([]);
     const eventListenersAreRegistered = useRef(false);
 
-    // Using a ref instead of a useState() hook because the value needs to be accessible to a
-    // Javascript event handler that's registered on the window (outside of React).
-    // See the window.Echo.channel().listen() event handler that's registered in this hook.
-    // Initially built this using [helicopterData, setHelicopterData] = useState([]) but the event
-    // handler always saw an empty collection, even after the state had been updated.
-    const helicopterData = useRef<HelicopterProps[]>([]);
-    const setHelicopterData = (helicopters: HelicopterProps[]) => {
-        helicopterData.current = helicopters;
+    const setHelicopterData = (next: HelicopterProps[]) => {
+        helicoptersRef.current = next;
+        setHelicopters(next);
     };
 
-    const onEventReceived = (event: any) => {
-        console.log(JSON.stringify(event));
+    const onEventReceived = useCallback((event: any) => {
         const updatedHelicopter = translateHelicopterFromApiSchemaToAppSchema(
             event.resourceStatus
         );
         logger.debug(
             `Received status update event for resource ${updatedHelicopter.id}`
         );
-        console.log(JSON.stringify(event));
 
-        let helicopters = helicopterData.current;
+        const next =
+            helicoptersRef.current.length === 0
+                ? [updatedHelicopter]
+                : mergeHelicopterUpdate(
+                      helicoptersRef.current,
+                      updatedHelicopter
+                  );
 
-        // Merge new update with existing data
-        if (helicopters.length === 0) {
-            logger.debug('Adding helicopter to empty collection');
-            helicopters.push(updatedHelicopter);
-            setHelicopterData(helicopters);
-        } else {
-            logger.debug('Merging helicopter into existing collection');
-
-            const unchangedHelicopters = helicopters.filter((h) => {
-                // Remove the helicopter that was updated (keep the others)
-                return h.id != updatedHelicopter.id;
-            });
-
-            // Now add the updated helicopter back into the collection
-            helicopters = [...unchangedHelicopters, updatedHelicopter];
-            setHelicopterData(helicopters);
-        }
-
-        // The onData() callback was passed in as a prop
-        onData(helicopters);
-    };
+        setHelicopterData(next);
+    }, []);
 
     const fetchAndSubscribe = useCallback(() => {
-        if (webMap === null) {
-            return;
-        }
-        // Make a one-time API request to fetch the initial data
-        // Subsequent updates will be handled by the event subscription above
-        // useEffect(() => {
         fetch('/api/status/all')
             .then((response) => response.json())
             .then((data) => {
@@ -88,12 +67,8 @@ export const useHelicopterData = (
                     translateHelicopterFromApiSchemaToAppSchema
                 );
                 setHelicopterData(formattedData);
-                onData(formattedData);
             })
             .then(() => {
-                /**
-                 * Subscribe to the Pusher broadcast channel for ResourceStatus updates
-                 */
                 if (
                     window.Echo?.channel !== undefined &&
                     !eventListenersAreRegistered.current
@@ -106,10 +81,14 @@ export const useHelicopterData = (
                     eventListenersAreRegistered.current = true;
                 }
             });
-    }, [onData, webMap]);
+    }, [onEventReceived]);
+
+    useEffect(() => {
+        fetchAndSubscribe();
+    }, [fetchAndSubscribe]);
 
     return {
-        initialData: helicopterData,
+        helicopters,
         fetchAndSubscribe,
     };
 };

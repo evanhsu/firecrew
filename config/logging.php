@@ -37,7 +37,12 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single', 'stdout'],
+            // Include BugSnag only when configured so local/dev without a key stays quiet.
+            'channels' => array_values(array_filter([
+                'single',
+                'stdout',
+                env('BUGSNAG_API_KEY') ? 'bugsnag' : null,
+            ])),
             'ignore_exceptions' => false,
         ],
 
@@ -45,6 +50,10 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        'bugsnag' => [
+            'driver' => 'bugsnag',
         ],
 
         'stdout' => [

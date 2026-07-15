@@ -67,19 +67,6 @@
             </div>
         </div>
     </div>
-
-    <nav class="navbar navbar-default navbar-fixed-bottom">
-      <div class="container" style="text-align: center;">
-        <p class="navbar-text navbar-center-brand">
-            A service of SmirkSoftware, LLC
-        </p>
-        <ul class="nav navbar-nav navbar-right">
-            <li>
-                <a href="/privacy">Privacy</a>
-            </li>
-        </ul>
-      </div>
-    </nav>
 </div>
 @endsection
 
@@ -135,50 +122,18 @@
         }
 
         window.onGoogleYoloLoad = (googleyolo) => {
-            // const retrievePromise = googleyolo.retrieve(googleyoloSettings);
-
-            // retrievePromise.then((credential) => {
-            //     if(credential.password) {
-            //         signInWithEmailAndPassword(credential.id, credential.password);
-            //     } else {
-            //         useGoogleIdTokenForAuth(credential.idToken);
-            //     }
-            // }, (error) => {
-            //     if(error.type === 'noCredentialsAvailable') {
-            //         console.log('Handling noCredentialsAvailable');
-            //         getHint();
-            //     }
-            // });
-
-
         }
 
         function signInWithEmailAndPassword(email, password) {
             let emailField = document.getElementById('email');
             let passwordField = document.getElementById('password');
-            let loginForm = document.getElementById('login-form');
 
             emailField.value = email;
             passwordField.value = password;
-
-            // loginForm.submit();
         }
 
         function useGoogleIdTokenForAuth(idToken) {
             console.log('using Google ID Token...');
-        }
-
-        function getHint() {
-            const hintPromise = googleyolo.hint(googleyoloSettings); 
-
-            hintPromise.then((credential) => {
-                console.log('hint resolved');
-                if(credential.password) {
-                    signInWithEmailAndPassword(credential.id, credential.password);
-                } else {
-                    useGoogleIdTokenForAuth(credential.idToken);
-                }
-            });
         }
     </script>
 @endsection

@@ -1,42 +1,50 @@
-import { useState } from 'react';
-import { PushUpDrawer } from './Drawer';
-import { Map } from './Map';
+import { useMemo, useRef, useState } from 'react';
+import { ANNOUNCEMENT } from '../AnnouncementBanner';
+import { APP_HEADER_HEIGHT } from '../../layout/AppHeader';
+import { AircraftDetailsDrawer } from './AircraftDetailsDrawer';
+import { HelicopterProps } from './Helicopter';
+import { Map, StatusMapHandle } from './Map';
+import { useHelicopterData } from './hooks/useHelicopterData';
 
 export const StatusMap = () => {
-    const wasDrawerPreviouslyClosed =
-        localStorage.getItem('instructionsDismissed') === '1';
-    const [isDrawerOpen, setIsDrawerOpen] = useState(
-        !wasDrawerPreviouslyClosed
+    const { helicopters } = useHelicopterData();
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const mapRef = useRef<StatusMapHandle>(null);
+
+    const selectedHelicopter = useMemo(
+        () => helicopters.find((h) => h.id === selectedId) ?? null,
+        [helicopters, selectedId]
     );
 
-    const handleDrawerToggle = () => {
-        localStorage.setItem('instructionsDismissed', '1');
-        setIsDrawerOpen(!isDrawerOpen);
+    const handleSelect = (helicopter: HelicopterProps) => {
+        setSelectedId(helicopter.id);
     };
 
+    const handleClearSelection = () => {
+        setSelectedId(null);
+    };
+
+    const bannerHeightPx =
+        ANNOUNCEMENT.enabled && ANNOUNCEMENT.message
+            ? ANNOUNCEMENT.heightPx
+            : 0;
+    const chromeHeightPx = APP_HEADER_HEIGHT + bannerHeightPx;
+
     return (
-        <>
-            <Map isDrawerOpen={isDrawerOpen} />
-            <PushUpDrawer
-                open={isDrawerOpen}
-                toggleDrawerOpen={handleDrawerToggle}
-            >
-                <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    <span>
-                        <img src="/images/symbols/rappelhelicopter-fresh.png" />
-                    </span>
-                    <span
-                        style={{
-                            fontSize: '1.2em',
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
-                    >
-                        Click on a helicopter to see its IA Range and additional
-                        details
-                    </span>
-                </div>
-            </PushUpDrawer>
-        </>
+        <div style={{ height: `calc(100vh - ${chromeHeightPx}px)` }}>
+            <Map
+                ref={mapRef}
+                helicopters={helicopters}
+                selectedId={selectedId}
+                onSelect={handleSelect}
+                onClearSelection={handleClearSelection}
+            />
+            <AircraftDetailsDrawer
+                helicopter={selectedHelicopter}
+                opened={selectedHelicopter !== null}
+                onClose={handleClearSelection}
+                onZoomToRange={() => mapRef.current?.fitToSelectedRange()}
+            />
+        </div>
     );
 };

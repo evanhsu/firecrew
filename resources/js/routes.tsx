@@ -1,7 +1,15 @@
-import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { createBrowserRouter, Outlet } from 'react-router';
 import { AnnouncementBanner } from './components/AnnouncementBanner';
-import { StatusMap } from './components/StatusMap/StatusMap';
 import StatusSummary from './containers/StatusSummary';
+
+// Lazy-load StatusMap so MapLibre and related map code stay out of the initial
+// bundle. Users who only visit the summary page never download that chunk.
+const StatusMap = lazy(() =>
+    import('./components/StatusMap/StatusMap').then((module) => ({
+        default: module.StatusMap,
+    }))
+);
 
 const StatusPagesLayout = () => (
     <>
@@ -16,7 +24,13 @@ const router = createBrowserRouter([
         children: [
             {
                 path: 'map',
-                element: <StatusMap />,
+                // Suspense is required for lazy() components; fallback={null}
+                // shows nothing while the map chunk is fetching.
+                element: (
+                    <Suspense fallback={null}>
+                        <StatusMap />
+                    </Suspense>
+                ),
             },
             {
                 path: 'summary',

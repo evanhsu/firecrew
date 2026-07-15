@@ -7,8 +7,6 @@ use App\Domain\Statuses\CrewStatus;
 use App\Domain\Statuses\ResourceStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use App\Domain\Items\Item;
-use App\Domain\People\Person;
 use App\Domain\Users\User;
 use Illuminate\Support\Facades\DB;
 
@@ -86,18 +84,6 @@ class Crew extends Model
     public function resourcesWithLatestStatus() {
         return $this->statusableResources()->with('latestStatus');
     }
-
-	public function people() {
-		return $this->belongsToMany(Person::class, 'crew_person');
-	}
-
-	public function roster($year) {
-		return $this->people()->wherePivot('year',$year);
-	}
-
-	public function items() {
-		return $this->hasMany(Item::class);
-	}
 
 	public function users() {
 	    return $this->hasMany(User::class);

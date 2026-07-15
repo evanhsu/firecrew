@@ -13,11 +13,6 @@ use Illuminate\Http\Request;
  */
 class PagesController extends Controller
 {
-    public function inventory($item)
-    {
-        return view('items.index');
-    }
-
     public function privacy(Request $request)
     {
     	// Tell the menubar which button to highlight (none)

@@ -21,7 +21,6 @@ if (!function_exists('is_active')) {
                 <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="{{ url('/') }}">
-                <!-- <img class="navbar-logo" src="{{ asset('images/firecrew_logo_800x400.png') }}" title="Firecrew" /> -->
                 FireCrew
             </a>
         </div>

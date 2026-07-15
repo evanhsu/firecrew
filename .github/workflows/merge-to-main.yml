@@ -7,18 +7,58 @@ on:
       - main
     paths-ignore:
       - "**.md"
-      - "tests/**"
 
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
+  test:
+    name: Run PHPUnit
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.3
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: firecrew_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -ppassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_mysql
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run tests
+        run: php artisan test
+        env:
+          APP_KEY: base64:aUPKkotNRs3KxlIYKREkFHI5cO2bzWiIoqt7uvdyrWI=
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: firecrew_test
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
   build-and-push-image-to-registry:
     name: Build image & deploy to dev
+    needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -35,7 +75,7 @@ jobs:
         continue-on-error: true
         run: |
           GC=$(doctl registry garbage-collection get-active --format UUID,RegistryName,Status --output json)
-          echo "::set-output name=uuid::$(echo $GC | jq -r '.[0].uuid')"
+          echo "uuid=$(echo $GC | jq -r '.[0].uuid')" >> $GITHUB_OUTPUT
           echo "Found active garbage collection in progress: $GC"
 
       # The DigitalOcean container registry is read-only during garbage collection, which can last 15 minutes or so.
@@ -46,7 +86,7 @@ jobs:
 
       - name: Get short-sha
         id: shortsha
-        run: echo "::set-output name=shortsha::$(echo $GITHUB_SHA | head -c7)"
+        run: echo "shortsha=$(echo $GITHUB_SHA | head -c7)" >> $GITHUB_OUTPUT
 
       # Uses credentials from the evanhsu/AuthBot Github App (https://github.com/settings/installations/28169783)
       - id: deploy-pat
