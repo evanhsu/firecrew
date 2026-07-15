@@ -644,7 +644,7 @@ class StatusSummaryTable extends Component {
                             Staffing summary
                         </Title>
                         <Text size="sm" c="dimmed">
-                            Scan the list, then expand a crew for full detail
+                            Click to expand a crew for full detail
                         </Text>
                     </Box>
 

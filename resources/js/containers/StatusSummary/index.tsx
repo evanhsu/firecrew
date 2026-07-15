@@ -4,12 +4,15 @@ import { useEffect } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 import StatusSummaryTable from '../../components/StatusSummaryTable';
+import StatusSummaryTableClassic from '../../components/StatusSummaryTableClassic';
+import { SummaryUiMigrationBanner } from '../../components/SummaryUiMigrationBanner';
 import {
     fetchSummary,
     receiveCrewStatusUpdate,
     receiveResourceStatusUpdate,
 } from './actions';
 import { selectSummary } from './selectors';
+import { useSummaryUiPreference } from './useSummaryUiPreference';
 
 export type StatusSummaryProps = {
     crews: List<any>;
@@ -19,6 +22,14 @@ export type StatusSummaryProps = {
 };
 
 const StatusSummary = (props: StatusSummaryProps) => {
+    const {
+        uiMode,
+        showBanner,
+        switchToNewUi,
+        revertToLegacyUi,
+        dismissBanner,
+    } = useSummaryUiPreference();
+
     useEffect(() => {
         props.fetchSummary();
 
@@ -37,7 +48,23 @@ const StatusSummary = (props: StatusSummaryProps) => {
         );
     }, []);
 
-    return <StatusSummaryTable crews={props.crews} />;
+    return (
+        <>
+            {showBanner && (
+                <SummaryUiMigrationBanner
+                    uiMode={uiMode}
+                    onTryNewUi={switchToNewUi}
+                    onRevertToLegacy={revertToLegacyUi}
+                    onDismiss={dismissBanner}
+                />
+            )}
+            {uiMode === 'legacy' ? (
+                <StatusSummaryTableClassic crews={props.crews} />
+            ) : (
+                <StatusSummaryTable crews={props.crews} />
+            )}
+        </>
+    );
 };
 
 StatusSummary.propTypes = {
