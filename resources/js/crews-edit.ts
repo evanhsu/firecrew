@@ -97,7 +97,12 @@ function initCrewEditForm() {
             '.aircraft-identifier'
         );
         const model = newForm.querySelector<HTMLSelectElement>('.aircraft-model');
-        const type = newForm.querySelector<HTMLInputElement>('.aircraft-type');
+        // Both the disabled display input and the hidden submit input share this class.
+        // querySelectorAll is required — jQuery's .prop() updated every match; a single
+        // querySelector only renamed the disabled field (which is never submitted).
+        const typeInputs = newForm.querySelectorAll<HTMLInputElement>(
+            '.aircraft-type'
+        );
         const releaseButton = newForm.querySelector<HTMLButtonElement>(
             '.release-aircraft-button'
         );
@@ -108,9 +113,9 @@ function initCrewEditForm() {
         if (model) {
             model.name = `crew[statusableResources][${i}][model]`;
         }
-        if (type) {
+        typeInputs.forEach((type) => {
             type.name = `crew[statusableResources][${i}][resource_type]`;
-        }
+        });
         if (releaseButton) {
             releaseButton.dataset.aircraftId = String(i);
         }
