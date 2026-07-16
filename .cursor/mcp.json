@@ -3,6 +3,14 @@
         "mantine": {
             "command": "npx",
             "args": ["-y", "@mantine/mcp-server"]
+        },
+        "smartbear": {
+            "command": "/bin/zsh",
+            "args": [
+                "-c",
+                "source \"$HOME/.zshrc\" && exec /Users/evanhsu/.local/share/fnm/node-versions/v22.22.2/installation/bin/node /Users/evanhsu/Development/firecrew/node_modules/@smartbear/mcp/dist/index.js"
+            ],
+            "envFile": "/Users/evanhsu/Development/firecrew/.env.mcp.local"
         }
     }
 }
