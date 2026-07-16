@@ -136,6 +136,29 @@
     font-weight: 600;
 }
 
+// Intel tab: label + help icon sit together, inputs share a column
+.intel-status-form .form-group {
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+}
+
+.intel-field-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 5.5rem;
+    min-height: 2.125rem;
+
+    .control-label {
+        margin-bottom: 0;
+    }
+}
+
+.intel-field-input {
+    flex: 1 1 auto;
+    max-width: 28rem;
+}
+
 .form-control {
     display: block;
     width: 100%;
