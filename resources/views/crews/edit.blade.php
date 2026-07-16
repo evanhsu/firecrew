@@ -45,6 +45,9 @@ function drawOneAircraftForm($index, $aircraft, $crew, $aircraft_models, $templa
 
         <div class=\"form-group\">
             <label for=\"aircraft-model\" class=\"control-label col-sm-2\">Make/Model</label>
+            <span class=\"control-label-helper control-label-helper-spacer\" aria-hidden=\"true\">
+                <span class=\"glyphicon glyphicon-question-sign\"></span>
+            </span>
             <div class=\"col-sm-4 col-md-3\">
                 <select class=\"form-control aircraft-model\" name=\"crew[statusableResources][".$index."][model]\">\n";
     
@@ -72,7 +75,6 @@ function drawOneAircraftForm($index, $aircraft, $crew, $aircraft_models, $templa
                 <input type=\"hidden\" class=\"form-control aircraft-type\" name=\"crew[statusableResources][".$index."][resource_type]\" value=\"RappelHelicopter\" readonly=true />
             </div>
         </div>\n";
-
 
     if(!$template) {
         $output .= "<div class=\"form-group\">
