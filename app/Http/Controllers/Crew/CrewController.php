@@ -167,18 +167,19 @@ class CrewController extends Controller
         }
 
         foreach ($aircraft_fields as $aircraft) {
-            if (!empty($aircraft['identifier'])) {
-
-                $resourceClass = "App\Domain\StatusableResources\\".$aircraft['resource_type'];
-                $resource = $resourceClass::firstOrCreate(array('identifier' => strtoupper($aircraft['identifier'])));
-
-                $resource->crew_id = $crew->id;
-                $resource->resource_type = $aircraft['resource_type'];
-                $resource->model = $aircraft['model'];
-                // Identifier cannot be changed
-
-                $resource->save();
+            if (empty($aircraft['identifier']) || empty($aircraft['resource_type'])) {
+                continue;
             }
+
+            $resourceClass = "App\\Domain\\StatusableResources\\".$aircraft['resource_type'];
+            $resource = $resourceClass::firstOrCreate(array('identifier' => strtoupper($aircraft['identifier'])));
+
+            $resource->crew_id = $crew->id;
+            $resource->resource_type = $aircraft['resource_type'];
+            $resource->model = $aircraft['model'] ?? null;
+            // Identifier cannot be changed
+
+            $resource->save();
         }
 
         // Everything completed successfully

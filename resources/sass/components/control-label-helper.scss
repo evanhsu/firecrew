@@ -4,6 +4,11 @@
 	padding-right: 0 !important;
 }
 
+.control-label-helper-spacer {
+	visibility: hidden;
+	pointer-events: none;
+}
+
 @media screen and (min-width: $breakpoint-md) {
 	.control-label-helper {
 		float: left;

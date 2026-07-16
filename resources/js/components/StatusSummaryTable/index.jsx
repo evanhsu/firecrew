@@ -420,10 +420,10 @@ const OverviewHeader = () => (
                 Crew
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                Personnel
+                Helicopter
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                Helicopter
+                Staffing
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                 Location
@@ -438,10 +438,10 @@ const OverviewHeader = () => (
                 Crew
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                Personnel
+                Helicopter
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                Helicopter
+                Staffing
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                 Location
@@ -536,10 +536,10 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                     <Text fw={700} size="sm" truncate="end">
                         {crewRow.get('name')}
                     </Text>
-                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
                     <OverviewCell>
                         {overview.identifiers.join(' · ') || '—'}
                     </OverviewCell>
+                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
                     <OverviewCell>{overview.location}</OverviewCell>
                     <Box style={{ justifySelf: 'end' }}>{statusBadge}</Box>
                 </Box>
@@ -550,10 +550,10 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                     <Text fw={700} size="sm" truncate="end">
                         {crewRow.get('name')}
                     </Text>
-                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
                     <OverviewCell>
                         {overview.identifiers.join(' · ') || '—'}
                     </OverviewCell>
+                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
                     <OverviewCell>{overview.location}</OverviewCell>
                     <OverviewCell>{overview.assignment}</OverviewCell>
                     <Box style={{ justifySelf: 'end' }}>{statusBadge}</Box>

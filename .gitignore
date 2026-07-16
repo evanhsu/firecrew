@@ -8,6 +8,7 @@ node_modules
 /vendor
 .env
 .env.backup
+.env.mcp.local
 .phpunit.result.cache
 .phpunit.cache/
 phpunit.xml.bak

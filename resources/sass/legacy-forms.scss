@@ -29,36 +29,86 @@
     width: 100%;
 }
 
-.col-xs-12 { width: 100%; }
-.col-xs-11 { width: 91.666%; }
-.col-xs-8 { width: 66.666%; }
-.col-xs-7 { width: 58.333%; }
-.col-xs-5 { width: 41.666%; }
-.col-xs-4 { width: 33.333%; }
-.col-xs-3 { width: 25%; }
-.col-xs-2 { width: 16.666%; }
-.col-xs-1 { width: 8.333%; }
+.col-xs-12 {
+    width: 100%;
+}
+.col-xs-11 {
+    width: 91.666%;
+}
+.col-xs-8 {
+    width: 66.666%;
+}
+.col-xs-7 {
+    width: 58.333%;
+}
+.col-xs-5 {
+    width: 41.666%;
+}
+.col-xs-4 {
+    width: 33.333%;
+}
+.col-xs-3 {
+    width: 25%;
+}
+.col-xs-2 {
+    width: 16.666%;
+}
+.col-xs-1 {
+    width: 8.333%;
+}
 
 @media (min-width: $breakpoint-sm) {
-    .col-sm-12 { width: 100%; }
-    .col-sm-10 { width: 83.333%; }
-    .col-sm-6 { width: 50%; }
-    .col-sm-4 { width: 33.333%; }
-    .col-sm-3 { width: 25%; }
-    .col-sm-2 { width: 16.666%; }
+    .col-sm-12 {
+        width: 100%;
+    }
+    .col-sm-10 {
+        width: 83.333%;
+    }
+    .col-sm-6 {
+        width: 50%;
+    }
+    .col-sm-4 {
+        width: 33.333%;
+    }
+    .col-sm-3 {
+        width: 25%;
+    }
+    .col-sm-2 {
+        width: 16.666%;
+    }
 }
 
 @media (min-width: $breakpoint-md) {
-    .col-md-12 { width: 100%; }
-    .col-md-8 { width: 66.666%; }
-    .col-md-6 { width: 50%; }
-    .col-md-5 { width: 41.666%; }
-    .col-md-4 { width: 33.333%; }
-    .col-md-3 { width: 25%; }
-    .col-md-2 { width: 16.666%; }
-    .col-md-1 { width: 8.333%; }
-    .col-md-offset-2 { margin-left: 16.666%; }
-    .col-md-offset-4 { margin-left: 33.333%; }
+    .col-md-12 {
+        width: 100%;
+    }
+    .col-md-8 {
+        width: 66.666%;
+    }
+    .col-md-6 {
+        width: 50%;
+    }
+    .col-md-5 {
+        width: 41.666%;
+    }
+    .col-md-4 {
+        width: 33.333%;
+    }
+    .col-md-3 {
+        width: 25%;
+    }
+    .col-md-2 {
+        width: 16.666%;
+    }
+    .col-md-1 {
+        width: 8.333%;
+    }
+    .col-md-offset-2 {
+        margin-left: 16.666%;
+    }
+    .col-md-offset-4 {
+        margin-left: 33.333%;
+    }
 }
 
 .form-inline {
@@ -84,6 +134,29 @@
     display: inline-block;
     margin-bottom: 0.25rem;
     font-weight: 600;
+}
+
+// Intel tab: label + help icon sit together, inputs share a column
+.intel-status-form .form-group {
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+}
+
+.intel-field-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 5.5rem;
+    min-height: 2.125rem;
+
+    .control-label {
+        margin-bottom: 0;
+    }
+}
+
+.intel-field-input {
+    flex: 1 1 auto;
+    max-width: 28rem;
 }
 
 .form-control {
@@ -181,10 +254,22 @@ textarea.form-control {
     border-radius: 0.25rem;
 }
 
-.alert-info { background: #e7f5ff; border-color: #a5d8ff; }
-.alert-success { background: #ebfbee; border-color: #b2f2bb; }
-.alert-warning { background: #fff9db; border-color: #ffe066; }
-.alert-danger { background: $color-error-bg; border-color: #ffc9c9; }
+.alert-info {
+    background: #e7f5ff;
+    border-color: #a5d8ff;
+}
+.alert-success {
+    background: #ebfbee;
+    border-color: #b2f2bb;
+}
+.alert-warning {
+    background: #fff9db;
+    border-color: #ffe066;
+}
+.alert-danger {
+    background: $color-error-bg;
+    border-color: #ffc9c9;
+}
 
 // Tables
 .table {
@@ -351,6 +436,89 @@ textarea.form-control {
 
 .glyphicon-menu-down::before {
     content: '▾';
+}
+
+.glyphicon-trash::before {
+    content: '×';
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.glyphicon-map-marker::before {
+    content: '⊕';
+    font-size: 0.875rem;
+    line-height: 1;
+}
+
+// Lat/Lon coordinate rows on status forms
+.latlon-form-group {
+    align-items: flex-start !important;
+}
+
+.latlon-fields {
+    display: flex;
+    flex-direction: column;
+    padding-left: 15px;
+}
+
+.latlon-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.latlon-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.latlon-hemisphere {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75rem;
+    height: 2.125rem;
+    padding: 0 0.4rem;
+    background: #e9ecef;
+    border: 1px solid $color-border;
+    border-radius: 0.25rem;
+    font-weight: 600;
+}
+
+.latlon-degrees,
+.latlon-minutes {
+    display: inline-block;
+    width: auto;
+    text-align: right;
+}
+
+.latlon-degrees {
+    width: 4.5rem;
+}
+
+.latlon-minutes {
+    width: 6.5rem;
+}
+
+.latlon-unit {
+    font-weight: 600;
+    line-height: 1;
+}
+
+.latlon-unit-label {
+    color: $color-text-muted;
+    font-size: 0.8125rem;
+}
+
+.latlon-geolocate {
+    margin-top: 0.15rem;
+}
+
+.geolocate_button {
+    text-decoration: none;
 }
 
 // App shell spacing for Mantine header/footer

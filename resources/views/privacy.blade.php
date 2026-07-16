@@ -1,4 +1,4 @@
-@extends('./layouts.app')
+@extends('layouts.app')
 
 @section('page-title','Privacy Policy - FireCrew')
 @section('page-description','An explanation of the data that we collect and how we use it.')

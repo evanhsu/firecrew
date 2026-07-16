@@ -99,7 +99,8 @@ class Aircraft extends Model
         $last_status = $this->status();
         if ($last_status->exists) {
             $last_update = $last_status->created_at;
-            $age_hours = $now->diffInHours($last_update);  // The number of hours between NOW and the last update
+            // Absolute age: Carbon 3 returns signed diffs by default (negative when last_update is in the past)
+            $age_hours = $now->diffInHours($last_update, true);
 
             if ($age_hours <= $max_fresh_age) $freshness = "fresh";
             elseif (($age_hours > $max_fresh_age) && ($age_hours < $expiration_age)) $freshness = "stale";

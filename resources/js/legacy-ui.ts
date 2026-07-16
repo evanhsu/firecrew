@@ -71,6 +71,8 @@ function initGeolocationButtons() {
 }
 
 function handleGeoClick(event: Event) {
+    event.preventDefault();
+
     if (!navigator.geolocation) {
         alert("Sorry, your browser doesn't support the geolocation feature.");
         return;
@@ -108,7 +110,7 @@ function populatePositionFields(
     const lonMin = (Math.abs(longitude) - lonDeg) * 60.0;
     const signedLonDeg = longitude < 0 ? lonDeg : lonDeg * -1.0;
 
-    const target = event.target as HTMLElement | null;
+    const target = (event.currentTarget ?? event.target) as HTMLElement | null;
     const targetForm = target?.closest('form');
     if (!targetForm) {
         return;

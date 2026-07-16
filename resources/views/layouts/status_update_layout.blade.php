@@ -1,4 +1,4 @@
-@extends('../layouts.app')
+@extends('layouts.app')
 
 @section('page-title','Status Update - FireCrew')
 @section('page-description','Post a new status update for your Crew and its Resources.')
