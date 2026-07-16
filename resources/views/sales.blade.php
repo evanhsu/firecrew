@@ -1,4 +1,4 @@
-@extends('./layouts.app')
+@extends('layouts.app')
 
 @section('page-title','FireCrew - A Common Operating Picture with intel direct from firefighting resources in the field.')
 @section('page-description')
