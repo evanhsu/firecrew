@@ -4,6 +4,7 @@ import {
     getResponseRingColor,
     HelicopterProps,
     isHelicopterFresh,
+    isMechanicalUnavailable,
 } from './Helicopter';
 import { HelicopterIcon } from './HelicopterIcon';
 import {
@@ -220,6 +221,7 @@ const MapView = forwardRef<StatusMapHandle, StatusMapViewProps>(
                     {helicopters.map((helicopter) => {
                         const fresh = isHelicopterFresh(helicopter.updatedAt);
                         const selected = helicopter.id === selectedId;
+                        const mechanical = isMechanicalUnavailable(helicopter);
 
                         return (
                             <Marker
@@ -247,6 +249,7 @@ const MapView = forwardRef<StatusMapHandle, StatusMapViewProps>(
                                 >
                                     <HelicopterIcon
                                         fresh={fresh}
+                                        mechanical={mechanical}
                                         alt={helicopter.tailnumber}
                                         width={65}
                                         height={65}

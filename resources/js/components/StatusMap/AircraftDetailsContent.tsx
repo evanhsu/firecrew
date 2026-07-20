@@ -8,10 +8,12 @@ import {
     Title,
 } from '@mantine/core';
 import type { ReactNode } from 'react';
+import MechanicalProblemLabel from '../StatusSummaryTable/MechanicalProblemLabel';
 import {
     getMakeModelLabel,
     getRangeStatuteMiles,
     HelicopterProps,
+    isMechanicalUnavailable,
 } from './Helicopter';
 
 export type AircraftDetailsContentProps = {
@@ -47,14 +49,23 @@ export const AircraftDetailsContent = ({
     onZoomToRange,
 }: AircraftDetailsContentProps) => {
     const range = getRangeStatuteMiles(helicopter.makeModel);
+    const mechanical = isMechanicalUnavailable(helicopter);
 
     return (
         <Stack gap="md" h="100%">
             {withHeader && (
                 <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <Title order={4} m={0}>
-                        {aircraftDetailsTitle(helicopter)}
-                    </Title>
+                    <Group
+                        gap="sm"
+                        wrap="nowrap"
+                        align="center"
+                        style={{ minWidth: 0 }}
+                    >
+                        <Title order={4} m={0}>
+                            {aircraftDetailsTitle(helicopter)}
+                        </Title>
+                        {mechanical ? <MechanicalProblemLabel /> : null}
+                    </Group>
                     {onClose && (
                         <CloseButton
                             aria-label="Close aircraft details"

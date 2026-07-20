@@ -1,5 +1,5 @@
 import { Badge, Tooltip } from '@mantine/core';
-import { ClockCountdownIcon } from '@phosphor-icons/react/dist/csr/ClockCountdown';
+import { WrenchIcon } from '@phosphor-icons/react/dist/csr/Wrench';
 import PropTypes from 'prop-types';
 
 const ICON_SIZE_BY_BADGE = {
@@ -13,6 +13,9 @@ const ICON_SIZE_BY_BADGE = {
 const BADGE_STYLES = {
     root: {
         '--badge-border-width': '2px',
+        // Darken the light-variant text/icon for WCAG AA contrast on red tint
+        '--badge-color': 'var(--mantine-color-red-9)',
+        '--badge-bg': 'var(--mantine-color-red-1)',
     },
     label: {
         display: 'inline-flex',
@@ -23,29 +26,25 @@ const BADGE_STYLES = {
 };
 
 /**
- * Compact badge indicating aircraft status data is stale (more than 18 hours old).
+ * Compact badge indicating an aircraft has a mechanical problem.
  */
-export function NeedsUpdateLabel({ size = 'lg', ...badgeProps }) {
+export function MechanicalProblemLabel({ size = 'lg', ...badgeProps }) {
     const iconSize = ICON_SIZE_BY_BADGE[size] ?? ICON_SIZE_BY_BADGE.sm;
 
     return (
-        <Tooltip
-            label="This data is more than 18 hours old"
-            withArrow
-            openDelay={200}
-        >
+        <Tooltip label="Unavailable: Mechanical" withArrow openDelay={200}>
             <Badge
                 variant="light"
-                color="yellow"
+                color="red"
                 radius="sm"
                 size={size}
-                aria-label="Needs update: this data is more than 18 hours old"
+                aria-label="Unavailable due to mechanical problem"
                 px={6}
                 bd="2px solid var(--badge-color)"
                 styles={BADGE_STYLES}
                 {...badgeProps}
             >
-                <ClockCountdownIcon
+                <WrenchIcon
                     size={iconSize}
                     weight="bold"
                     aria-hidden
@@ -56,8 +55,8 @@ export function NeedsUpdateLabel({ size = 'lg', ...badgeProps }) {
     );
 }
 
-NeedsUpdateLabel.propTypes = {
+MechanicalProblemLabel.propTypes = {
     size: PropTypes.string,
 };
 
-export default NeedsUpdateLabel;
+export default MechanicalProblemLabel;

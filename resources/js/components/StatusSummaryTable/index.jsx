@@ -15,11 +15,15 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import DutyOfficer from './DutyOfficer';
+import MechanicalProblemLabel from './MechanicalProblemLabel';
 import NeedsUpdateLabel from './NeedsUpdateLabel';
 import OnIncidentsLabel from './OnIncidentsLabel';
 import PersonnelCountLabel from './PersonnelCountLabel';
 import { isResourceStale } from './styles';
 import Timestamp from './Timestamp';
+
+/** Assignment value that indicates an aircraft has a mechanical problem. */
+const MECHANICAL_ASSIGNMENT = 'Unavailable: Mechanical';
 
 /** Shared column template so header + nested aircraft rows stay aligned. */
 const AIRCRAFT_GRID_COLUMNS = {
@@ -75,6 +79,13 @@ function boostersIn(resource) {
         return resource.getIn(['latest_status', 'staffing_value2'], '0');
     }
     return '';
+}
+
+function hasMechanicalProblem(resource) {
+    return (
+        resource.getIn(['latest_status', 'assigned_fire_name']) ===
+        MECHANICAL_ASSIGNMENT
+    );
 }
 
 function getCrewTotalStaffing(crewRow) {
@@ -173,8 +184,16 @@ const SummaryTotals = ({ crews }) => {
         computeTotals(crews);
 
     const stats = [
-        { label: 'Staffing', value: totalStaffing },
-        { label: 'On incidents', value: totalPersonnelOnStaffedIncidents },
+        {
+            label: 'Staffing',
+            value: totalStaffing,
+            legend: <PersonnelCountLabel />,
+        },
+        {
+            label: 'On incidents',
+            value: totalPersonnelOnStaffedIncidents,
+            legend: <OnIncidentsLabel />,
+        },
         { label: 'Boosters in', value: totalBoosters },
     ];
 
@@ -182,9 +201,17 @@ const SummaryTotals = ({ crews }) => {
         <SimpleGrid cols={3} spacing="sm">
             {stats.map((stat) => (
                 <Paper key={stat.label} withBorder p="md" radius="md">
-                    <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                        {stat.label}
-                    </Text>
+                    <Group
+                        justify="space-between"
+                        align="flex-start"
+                        gap="xs"
+                        wrap="nowrap"
+                    >
+                        <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                            {stat.label}
+                        </Text>
+                        {stat.legend ?? null}
+                    </Group>
                     <Text size="xl" fw={700} lh={1.2} mt={4}>
                         {stat.value}
                     </Text>
@@ -227,7 +254,7 @@ const StaffedIncidentList = ({ jsonString }) => {
                         align="flex-start"
                     >
                         {personnel !== '' && (
-                            <PersonnelCountLabel count={personnel} />
+                            <OnIncidentsLabel count={personnel} />
                         )}
                         <Box style={{ flex: 1, minWidth: 0 }}>
                             <Text size="sm" fw={500} lh={1.3}>
@@ -281,6 +308,8 @@ const HelicopterCard = ({ resource }) => {
     const boosters = boostersIn(resource);
     const staffedIncidents = resource.getIn(['latest_status', 'comments1']);
     const hasSpotter = Boolean(managerName || managerPhone);
+    const stale = isResourceStale(resource);
+    const mechanical = hasMechanicalProblem(resource);
     const incidentsContent = hasStaffedIncidents(staffedIncidents) ? (
         <StaffedIncidentList jsonString={staffedIncidents} />
     ) : null;
@@ -291,22 +320,40 @@ const HelicopterCard = ({ resource }) => {
             radius="md"
             p="md"
             bg="var(--mantine-color-body)"
-            style={{ borderColor: 'var(--mantine-color-gray-3)' }}
+            style={{
+                borderColor: stale
+                    ? 'var(--mantine-color-yellow-6)'
+                    : 'var(--mantine-color-gray-3)',
+            }}
         >
             <Group justify="space-between" align="flex-start" mb="sm" gap="sm">
                 <Box>
-                    <Text fw={700} size="md" lh={1.2}>
+                    <Text
+                        fw={700}
+                        size="md"
+                        lh={1.2}
+                        fs={stale ? 'italic' : undefined}
+                        c={stale ? 'dimmed' : undefined}
+                    >
                         {identifier}
                     </Text>
                     {model && (
-                        <Text size="sm" c="dimmed">
+                        <Text
+                            size="sm"
+                            c="dimmed"
+                            fs={stale ? 'italic' : undefined}
+                        >
                             {model}
                         </Text>
                     )}
                 </Box>
-                {staffing !== '' && (
-                    <PersonnelCountLabel count={staffing} size="lg" />
-                )}
+                <Group gap={6} wrap="nowrap">
+                    {mechanical ? <MechanicalProblemLabel /> : null}
+                    {stale ? <NeedsUpdateLabel /> : null}
+                    {staffing !== '' && (
+                        <PersonnelCountLabel count={staffing} size="lg" />
+                    )}
+                </Group>
             </Group>
 
             {/* Fixed field order so sections stay in the same grid slot across aircraft */}
@@ -437,6 +484,14 @@ const AircraftOverviewRow = ({ resource }) => {
     const staffingCount = parseInt(staffing, 10);
     const safeStaffing = Number.isNaN(staffingCount) ? 0 : staffingCount;
     const stale = isResourceStale(resource);
+    const mechanical = hasMechanicalProblem(resource);
+
+    const renderStatusLabels = () => (
+        <>
+            {mechanical ? <MechanicalProblemLabel /> : null}
+            {stale ? <NeedsUpdateLabel /> : null}
+        </>
+    );
 
     return (
         <Box
@@ -468,7 +523,7 @@ const AircraftOverviewRow = ({ resource }) => {
                     </Text>
                 </Box>
                 <Group gap={6} wrap="nowrap" justify="flex-end">
-                    {stale ? <NeedsUpdateLabel /> : null}
+                    {renderStatusLabels()}
                     <PersonnelCountLabel count={safeStaffing} />
                 </Group>
             </Box>
@@ -482,9 +537,9 @@ const AircraftOverviewRow = ({ resource }) => {
                 <OverviewCell stale={stale}>{identifier}</OverviewCell>
                 <PersonnelCountLabel count={safeStaffing} />
                 <OverviewCell stale={stale}>{location}</OverviewCell>
-                <Box style={{ justifySelf: 'end' }}>
-                    {stale ? <NeedsUpdateLabel /> : null}
-                </Box>
+                <Group gap={6} wrap="nowrap" justify="flex-end">
+                    {renderStatusLabels()}
+                </Group>
             </Box>
 
             {/* Desktop */}
@@ -493,9 +548,9 @@ const AircraftOverviewRow = ({ resource }) => {
                 <PersonnelCountLabel count={safeStaffing} />
                 <OverviewCell stale={stale}>{location}</OverviewCell>
                 <OverviewCell stale={stale}>{assignment}</OverviewCell>
-                <Box style={{ justifySelf: 'end' }}>
-                    {stale ? <NeedsUpdateLabel /> : null}
-                </Box>
+                <Group gap={6} wrap="nowrap" justify="flex-end">
+                    {renderStatusLabels()}
+                </Group>
             </Box>
         </Box>
     );

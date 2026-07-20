@@ -1,5 +1,6 @@
-import { Drawer } from '@mantine/core';
+import { Drawer, Group } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+import MechanicalProblemLabel from '../StatusSummaryTable/MechanicalProblemLabel';
 import {
     AircraftDetailsContent,
     aircraftDetailsTitle,
@@ -8,7 +9,7 @@ import {
     DESKTOP_DRAWER_WIDTH_PX,
     MOBILE_DRAWER_SIZE,
 } from './detailsLayout';
-import { HelicopterProps } from './Helicopter';
+import { HelicopterProps, isMechanicalUnavailable } from './Helicopter';
 
 export type AircraftDetailsDrawerProps = {
     helicopter: HelicopterProps | null;
@@ -28,6 +29,8 @@ export const AircraftDetailsDrawer = ({
     onZoomToRange,
 }: AircraftDetailsDrawerProps) => {
     const isDesktop = useMediaQuery('(min-width: 62em)');
+    const mechanical =
+        helicopter !== null && isMechanicalUnavailable(helicopter);
 
     return (
         <Drawer
@@ -40,7 +43,16 @@ export const AircraftDetailsDrawer = ({
             lockScroll={false}
             trapFocus={false}
             closeOnClickOutside={false}
-            title={helicopter ? aircraftDetailsTitle(helicopter) : 'Aircraft'}
+            title={
+                helicopter ? (
+                    <Group gap="sm" wrap="nowrap" align="center">
+                        <span>{aircraftDetailsTitle(helicopter)}</span>
+                        {mechanical ? <MechanicalProblemLabel /> : null}
+                    </Group>
+                ) : (
+                    'Aircraft'
+                )
+            }
             styles={{
                 content: {
                     borderLeft: isDesktop
