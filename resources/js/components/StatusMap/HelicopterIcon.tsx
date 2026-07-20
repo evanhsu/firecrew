@@ -1,4 +1,4 @@
-import type { ImgHTMLAttributes } from 'react';
+import type { ImgHTMLAttributes, CSSProperties } from 'react';
 
 export type HelicopterIconState = 'fresh' | 'stale';
 
@@ -10,6 +10,8 @@ export type HelicopterIconProps = Omit<
     state?: HelicopterIconState;
     /** Convenience alias for `state={fresh ? 'fresh' : 'stale'}`. */
     fresh?: boolean;
+    /** When true, draw a red equilateral triangle stroke around the icon. */
+    mechanical?: boolean;
 };
 
 const ICON_PATH = '/images/symbols';
@@ -25,13 +27,18 @@ export function getHelicopterIconSrc(
     return HELICOPTER_ICON_URLS[state];
 }
 
+/** Equilateral triangle points centered in a 100×100 viewBox (tip up). */
+const MECHANICAL_TRIANGLE_POINTS = '50,4 96,88 4,88';
+
 /**
  * Top-down rappel helicopter marker. Uses transparent PNGs; switches
- * fresh vs stale via `state` / `fresh`.
+ * fresh vs stale via `state` / `fresh`. Optionally frames the icon with a
+ * red equilateral triangle when `mechanical` is true.
  */
 export function HelicopterIcon({
     state,
     fresh,
+    mechanical = false,
     width = 65,
     height = 65,
     alt,
@@ -41,7 +48,7 @@ export function HelicopterIcon({
     const resolved: HelicopterIconState =
         state ?? (fresh === false ? 'stale' : 'fresh');
 
-    return (
+    const img = (
         <img
             src={getHelicopterIconSrc(resolved)}
             alt={alt ?? ''}
@@ -51,5 +58,42 @@ export function HelicopterIcon({
             style={{ display: 'block', ...style }}
             {...rest}
         />
+    );
+
+    if (!mechanical) {
+        return img;
+    }
+
+    const wrapperStyle: CSSProperties = {
+        position: 'relative',
+        width,
+        height,
+        display: 'block',
+    };
+
+    return (
+        <div style={wrapperStyle}>
+            {img}
+            <svg
+                viewBox="0 0 100 100"
+                width={width}
+                height={height}
+                aria-hidden
+                style={{
+                    position: 'absolute',
+                    inset: 0,
+                    overflow: 'visible',
+                    pointerEvents: 'none',
+                }}
+            >
+                <polygon
+                    points={MECHANICAL_TRIANGLE_POINTS}
+                    fill="none"
+                    stroke="var(--mantine-color-red-9)"
+                    strokeWidth={5}
+                    strokeLinejoin="round"
+                />
+            </svg>
+        </div>
     );
 }

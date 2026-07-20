@@ -43,6 +43,13 @@ export type HelicopterProps = {
     updatedAt: Date;
 };
 
+/** Assignment value that indicates an aircraft has a mechanical problem. */
+export const MECHANICAL_ASSIGNMENT = 'Unavailable: Mechanical';
+
+export const isMechanicalUnavailable = (
+    helicopter: Pick<HelicopterProps, 'assignedFireName'>
+): boolean => helicopter.assignedFireName === MECHANICAL_ASSIGNMENT;
+
 const FRESH_MS = 18 * 60 * 60 * 1000;
 const ICON_PATH = '/images/symbols';
 
