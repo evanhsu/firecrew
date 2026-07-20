@@ -17,20 +17,20 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import DutyOfficer from './DutyOfficer';
 import NeedsUpdateLabel from './NeedsUpdateLabel';
 import PersonnelCountLabel from './PersonnelCountLabel';
-import { isCrewStale } from './styles';
+import { isResourceStale } from './styles';
 import Timestamp from './Timestamp';
 
-/** Shared column template so header + collapsed rows stay aligned. */
-const OVERVIEW_GRID_COLUMNS = {
-    base: '14px minmax(0, 1fr) auto',
-    sm: '14px minmax(9rem, 1.5fr) 4.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 2.5rem',
-    md: '14px minmax(9rem, 1.4fr) 4.5rem minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.2fr) 2.5rem',
+/** Shared column template so header + nested aircraft rows stay aligned. */
+const AIRCRAFT_GRID_COLUMNS = {
+    base: 'minmax(0, 1fr) auto',
+    sm: 'minmax(5rem, 1fr) 4.5rem minmax(0, 1.3fr) 2.5rem',
+    md: 'minmax(5rem, 1fr) 4.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 2.5rem',
 };
 
-const overviewGridStyle = (breakpoint) => ({
+const aircraftGridStyle = (breakpoint) => ({
     display: 'grid',
     gridTemplateColumns:
-        OVERVIEW_GRID_COLUMNS[breakpoint] || OVERVIEW_GRID_COLUMNS.base,
+        AIRCRAFT_GRID_COLUMNS[breakpoint] || AIRCRAFT_GRID_COLUMNS.base,
     alignItems: 'center',
     columnGap: 'var(--mantine-spacing-md)',
     width: '100%',
@@ -76,46 +76,13 @@ function boostersIn(resource) {
     return '';
 }
 
-function uniqueNonEmpty(values) {
-    return [...new Set(values.filter(Boolean))];
-}
-
-function getCrewOverview(crewRow) {
+function getCrewTotalStaffing(crewRow) {
     const resources = crewRow.get('statusable_resources') || fromJS([]);
 
-    const totalStaffing = resources.reduce((total, resource) => {
+    return resources.reduce((total, resource) => {
         const staffing = parseInt(staffingValues(resource), 10);
         return Number.isNaN(staffing) ? total : total + staffing;
     }, 0);
-
-    const identifiers = resources
-        .map((resource) => resource.get('identifier')?.toUpperCase())
-        .filter(Boolean)
-        .toArray();
-
-    const locations = uniqueNonEmpty(
-        resources
-            .map((resource) =>
-                resource.getIn(['latest_status', 'location_name'])
-            )
-            .toArray()
-    );
-
-    const assignments = uniqueNonEmpty(
-        resources
-            .map((resource) =>
-                resource.getIn(['latest_status', 'assigned_fire_name'])
-            )
-            .toArray()
-    );
-
-    return {
-        totalStaffing,
-        identifiers,
-        location: locations.join(' · ') || '—',
-        assignment: assignments.join(' · ') || '—',
-        helicopterCount: resources.size,
-    };
 }
 
 function computeTotals(crews) {
@@ -373,14 +340,21 @@ HelicopterCard.propTypes = {
     resource: ImmutablePropTypes.map,
 };
 
-const OverviewCell = ({ children }) => (
-    <Text size="sm" truncate="end" fw={500}>
+const OverviewCell = ({ children, stale = false }) => (
+    <Text
+        size="sm"
+        truncate="end"
+        fw={500}
+        fs={stale ? 'italic' : undefined}
+        c={stale ? 'dimmed' : undefined}
+    >
         {children}
     </Text>
 );
 
 OverviewCell.propTypes = {
     children: PropTypes.node,
+    stale: PropTypes.bool,
 };
 
 const ExpandIcon = ({ expanded }) => (
@@ -413,12 +387,8 @@ const OverviewHeader = () => (
             pb={4}
             visibleFrom="sm"
             hiddenFrom="md"
-            style={overviewGridStyle('sm')}
+            style={aircraftGridStyle('sm')}
         >
-            <Box />
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                Crew
-            </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                 Helicopter
             </Text>
@@ -432,11 +402,7 @@ const OverviewHeader = () => (
                 Status
             </Text>
         </Box>
-        <Box px="md" pb={4} visibleFrom="md" style={overviewGridStyle('md')}>
-            <Box />
-            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                Crew
-            </Text>
+        <Box px="md" pb={4} visibleFrom="md" style={aircraftGridStyle('md')}>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                 Helicopter
             </Text>
@@ -456,22 +422,92 @@ const OverviewHeader = () => (
     </>
 );
 
+const AircraftOverviewRow = ({ resource }) => {
+    const identifier = resource.get('identifier')?.toUpperCase() || '—';
+    const location =
+        resource.getIn(['latest_status', 'location_name']) || '—';
+    const assignment =
+        resource.getIn(['latest_status', 'assigned_fire_name']) || '—';
+    const staffing = staffingValues(resource);
+    const staffingCount = parseInt(staffing, 10);
+    const safeStaffing = Number.isNaN(staffingCount) ? 0 : staffingCount;
+    const stale = isResourceStale(resource);
+
+    return (
+        <Box
+            py="xs"
+            style={{
+                borderTop: '1px solid var(--mantine-color-gray-2)',
+            }}
+        >
+            {/* Mobile */}
+            <Box hiddenFrom="sm" style={aircraftGridStyle('base')}>
+                <Box style={{ minWidth: 0 }}>
+                    <Text
+                        fw={600}
+                        size="sm"
+                        truncate="end"
+                        lh={1.3}
+                        fs={stale ? 'italic' : undefined}
+                        c={stale ? 'dimmed' : undefined}
+                    >
+                        {identifier}
+                    </Text>
+                    <Text
+                        size="xs"
+                        c="dimmed"
+                        truncate="end"
+                        fs={stale ? 'italic' : undefined}
+                    >
+                        {location}
+                    </Text>
+                </Box>
+                <Group gap={6} wrap="nowrap" justify="flex-end">
+                    {stale ? <NeedsUpdateLabel /> : null}
+                    <PersonnelCountLabel count={safeStaffing} />
+                </Group>
+            </Box>
+
+            {/* Tablet */}
+            <Box
+                visibleFrom="sm"
+                hiddenFrom="md"
+                style={aircraftGridStyle('sm')}
+            >
+                <OverviewCell stale={stale}>{identifier}</OverviewCell>
+                <PersonnelCountLabel count={safeStaffing} />
+                <OverviewCell stale={stale}>{location}</OverviewCell>
+                <Box style={{ justifySelf: 'end' }}>
+                    {stale ? <NeedsUpdateLabel /> : null}
+                </Box>
+            </Box>
+
+            {/* Desktop */}
+            <Box visibleFrom="md" style={aircraftGridStyle('md')}>
+                <OverviewCell stale={stale}>{identifier}</OverviewCell>
+                <PersonnelCountLabel count={safeStaffing} />
+                <OverviewCell stale={stale}>{location}</OverviewCell>
+                <OverviewCell stale={stale}>{assignment}</OverviewCell>
+                <Box style={{ justifySelf: 'end' }}>
+                    {stale ? <NeedsUpdateLabel /> : null}
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+AircraftOverviewRow.propTypes = {
+    resource: ImmutablePropTypes.map.isRequired,
+};
+
 const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
     if (typeof crewRow?.get('statusable_resources') === 'undefined') {
         return null;
     }
 
-    const stale = isCrewStale(crewRow);
     const resources = crewRow.get('statusable_resources');
-    const overview = getCrewOverview(crewRow);
+    const totalStaffing = getCrewTotalStaffing(crewRow);
     const phone = crewRow.get('phone');
-
-    const backgroundColor = 'var(--mantine-color-body)';
-    // const backgroundColor = isExpanded
-    //     ? 'var(--mantine-color-blue-0)'
-    //     : 'var(--mantine-color-body)';
-
-    const statusBadge = stale ? <NeedsUpdateLabel /> : null;
 
     return (
         <Paper
@@ -479,15 +515,10 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
             withBorder
             radius="md"
             style={{
-                backgroundColor,
-                borderColor: stale
-                    ? 'var(--mantine-color-yellow-6)'
-                    : 'var(--mantine-color-blue-3)',
-                // Always use a 4px left border so columns stay aligned across rows
+                backgroundColor: 'var(--mantine-color-body)',
+                borderColor: 'var(--mantine-color-blue-3)',
                 borderLeftWidth: 4,
-                borderLeftColor: stale
-                    ? 'var(--mantine-color-yellow-6)'
-                    : 'var(--mantine-color-blue-3)',
+                borderLeftColor: 'var(--mantine-color-blue-3)',
                 transition:
                     'background-color 120ms ease, border-color 120ms ease',
                 overflow: 'hidden',
@@ -497,67 +528,56 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                 onClick={onToggle}
                 w="100%"
                 px="md"
-                py="sm"
+                pt="sm"
+                pb="sm"
                 aria-expanded={isExpanded}
                 style={{
                     display: 'block',
                     textAlign: 'left',
                 }}
             >
-                {/* Mobile overview */}
-                <Box hiddenFrom="sm" style={overviewGridStyle('base')}>
-                    <ExpandIcon expanded={isExpanded} />
-                    <Box style={{ minWidth: 0 }}>
-                        <Text fw={700} size="sm" truncate="end" lh={1.3}>
+                <Group
+                    justify="space-between"
+                    align="center"
+                    gap="sm"
+                    wrap="nowrap"
+                >
+                    <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+                        <ExpandIcon expanded={isExpanded} />
+                        <Text fw={700} size="sm" truncate="end">
                             {crewRow.get('name')}
                         </Text>
-                        <Text size="xs" c="dimmed" truncate="end">
-                            {overview.identifiers.join(' · ') ||
-                                'No helicopter'}
-                            {' · '}
-                            {overview.location}
-                        </Text>
-                    </Box>
-                    <Group gap={6} wrap="nowrap" justify="flex-end">
-                        {statusBadge}
-                        <PersonnelCountLabel
-                            count={overview.totalStaffing || 0}
-                        />
                     </Group>
-                </Box>
+                    <PersonnelCountLabel count={totalStaffing || 0} />
+                </Group>
 
-                {/* Tablet overview */}
-                <Box
-                    visibleFrom="sm"
-                    hiddenFrom="md"
-                    style={overviewGridStyle('sm')}
-                >
-                    <ExpandIcon expanded={isExpanded} />
-                    <Text fw={700} size="sm" truncate="end">
-                        {crewRow.get('name')}
-                    </Text>
-                    <OverviewCell>
-                        {overview.identifiers.join(' · ') || '—'}
-                    </OverviewCell>
-                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
-                    <OverviewCell>{overview.location}</OverviewCell>
-                    <Box style={{ justifySelf: 'end' }}>{statusBadge}</Box>
-                </Box>
-
-                {/* Desktop overview */}
-                <Box visibleFrom="md" style={overviewGridStyle('md')}>
-                    <ExpandIcon expanded={isExpanded} />
-                    <Text fw={700} size="sm" truncate="end">
-                        {crewRow.get('name')}
-                    </Text>
-                    <OverviewCell>
-                        {overview.identifiers.join(' · ') || '—'}
-                    </OverviewCell>
-                    <PersonnelCountLabel count={overview.totalStaffing || 0} />
-                    <OverviewCell>{overview.location}</OverviewCell>
-                    <OverviewCell>{overview.assignment}</OverviewCell>
-                    <Box style={{ justifySelf: 'end' }}>{statusBadge}</Box>
-                </Box>
+                {!isExpanded &&
+                    (resources.size === 0 ? (
+                        <Box
+                            pt="xs"
+                            mt="xs"
+                            style={{
+                                borderTop:
+                                    '1px solid var(--mantine-color-gray-2)',
+                            }}
+                        >
+                            <Text size="sm" c="dimmed">
+                                No helicopter reported
+                            </Text>
+                        </Box>
+                    ) : (
+                        <Box mt="xs">
+                            {resources.map((resource) => (
+                                <AircraftOverviewRow
+                                    key={
+                                        resource.get('id') ||
+                                        resource.get('identifier')
+                                    }
+                                    resource={resource}
+                                />
+                            ))}
+                        </Box>
+                    ))}
             </UnstyledButton>
 
             <Collapse expanded={isExpanded}>
@@ -594,7 +614,10 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                             ) : (
                                 resources.map((resource) => (
                                     <HelicopterCard
-                                        key={resource.get('identifier')}
+                                        key={
+                                            resource.get('id') ||
+                                            resource.get('identifier')
+                                        }
                                         resource={resource}
                                     />
                                 ))
