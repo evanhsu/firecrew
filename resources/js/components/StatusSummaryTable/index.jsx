@@ -16,6 +16,7 @@ import React, { Component } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import DutyOfficer from './DutyOfficer';
 import NeedsUpdateLabel from './NeedsUpdateLabel';
+import OnIncidentsLabel from './OnIncidentsLabel';
 import PersonnelCountLabel from './PersonnelCountLabel';
 import { isResourceStale } from './styles';
 import Timestamp from './Timestamp';
@@ -85,6 +86,37 @@ function getCrewTotalStaffing(crewRow) {
     }, 0);
 }
 
+function getResourcePersonnelOnIncidents(resource) {
+    const staffedIncidents = resource.getIn(['latest_status', 'comments1'], '');
+    if (!staffedIncidents) {
+        return 0;
+    }
+
+    const incidentsArray = parseStaffedIncidentsJson(staffedIncidents);
+    if (!incidentsArray || incidentsArray.length === 0) {
+        return 0;
+    }
+
+    return incidentsArray.reduce((personnelTotal, incident) => {
+        if (!incident.personnel) {
+            return personnelTotal;
+        }
+        const personnel = parseInt(incident.personnel, 10);
+        return Number.isNaN(personnel)
+            ? personnelTotal
+            : personnelTotal + personnel;
+    }, 0);
+}
+
+function getCrewTotalOnIncidents(crewRow) {
+    const resources = crewRow.get('statusable_resources') || fromJS([]);
+
+    return resources.reduce(
+        (total, resource) => total + getResourcePersonnelOnIncidents(resource),
+        0
+    );
+}
+
 function computeTotals(crews) {
     const helicopterRows = crews.flatMap((crew) =>
         crew.get('statusable_resources')
@@ -107,35 +139,8 @@ function computeTotals(crews) {
     }, 0);
 
     const totalPersonnelOnStaffedIncidents = helicopterRows.reduce(
-        (total, helicopter) => {
-            const staffedIncidents = helicopter.getIn(
-                ['latest_status', 'comments1'],
-                ''
-            );
-            if (!staffedIncidents) {
-                return total;
-            }
-
-            const incidentsArray = parseStaffedIncidentsJson(staffedIncidents);
-            if (!incidentsArray || incidentsArray.length === 0) {
-                return total;
-            }
-
-            const personnelCount = incidentsArray.reduce(
-                (personnelTotal, incident) => {
-                    if (!incident.personnel) {
-                        return personnelTotal;
-                    }
-                    const personnel = parseInt(incident.personnel, 10);
-                    return Number.isNaN(personnel)
-                        ? personnelTotal
-                        : personnelTotal + personnel;
-                },
-                0
-            );
-
-            return total + personnelCount;
-        },
+        (total, helicopter) =>
+            total + getResourcePersonnelOnIncidents(helicopter),
         0
     );
 
@@ -507,6 +512,7 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
 
     const resources = crewRow.get('statusable_resources');
     const totalStaffing = getCrewTotalStaffing(crewRow);
+    const totalOnIncidents = getCrewTotalOnIncidents(crewRow);
     const phone = crewRow.get('phone');
 
     return (
@@ -548,7 +554,10 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                             {crewRow.get('name')}
                         </Text>
                     </Group>
-                    <PersonnelCountLabel count={totalStaffing || 0} />
+                    <Group gap={6} wrap="nowrap">
+                        <PersonnelCountLabel count={totalStaffing || 0} />
+                        <OnIncidentsLabel count={totalOnIncidents || 0} />
+                    </Group>
                 </Group>
 
                 {!isExpanded &&
