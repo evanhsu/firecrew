@@ -1,6 +1,6 @@
 import { Badge, Tooltip } from '@mantine/core';
 import PropTypes from 'prop-types';
-import { FlightHelmetIcon } from '../FlightHelmetIcon';
+import { PulaskiIcon } from '../PulaskiIcon';
 
 const ICON_SIZE_BY_BADGE = {
     xs: 12,
@@ -11,9 +11,10 @@ const ICON_SIZE_BY_BADGE = {
 };
 
 /**
- * Tag-style label for rappel personnel counts.
+ * Tag-style label for personnel currently on staffed incidents.
+ * Uses a dark fire-red on a light tint so text/icon stay readable.
  */
-export function PersonnelCountLabel({ count, size = 'lg', ...badgeProps }) {
+export function OnIncidentsLabel({ count, size = 'lg', ...badgeProps }) {
     const value = Number.parseInt(count, 10);
     const safeCount = Number.isNaN(value) ? 0 : value;
     const iconSize = ICON_SIZE_BY_BADGE[size] ?? ICON_SIZE_BY_BADGE.sm;
@@ -21,27 +22,26 @@ export function PersonnelCountLabel({ count, size = 'lg', ...badgeProps }) {
 
     return (
         <Tooltip
-            label={`${safeCount} ${unit} currently staffing`}
+            label={`${safeCount} ${unit} currently on incidents`}
             withArrow
             openDelay={200}
         >
             <Badge
                 variant="light"
-                color="blue"
+                color="red"
                 radius="sm"
                 size={size}
-                aria-label={`${safeCount} ${unit}`}
+                aria-label={`${safeCount} ${unit} on incidents`}
                 leftSection={
-                    <FlightHelmetIcon
-                        size={iconSize}
-                        weight="bold"
-                        aria-hidden
-                    />
+                    <PulaskiIcon size={iconSize} weight="bold" aria-hidden />
                 }
                 bd="2px solid var(--badge-color)"
                 styles={{
                     root: {
                         '--badge-border-width': '2px',
+                        // Darken the light-variant text/icon for WCAG AA contrast on red tint
+                        '--badge-color': 'var(--mantine-color-red-9)',
+                        '--badge-bg': 'var(--mantine-color-red-1)',
                     },
                     label: {
                         minWidth: '2ch',
@@ -57,9 +57,9 @@ export function PersonnelCountLabel({ count, size = 'lg', ...badgeProps }) {
     );
 }
 
-PersonnelCountLabel.propTypes = {
+OnIncidentsLabel.propTypes = {
     count: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     size: PropTypes.string,
 };
 
-export default PersonnelCountLabel;
+export default OnIncidentsLabel;
