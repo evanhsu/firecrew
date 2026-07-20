@@ -90,6 +90,7 @@
                     <option value="Prepo" {{ $status->assigned_fire_name == 'Prepo' ? 'selected' : '' }}>Prepo</option>
                     <option value="Large Fire Support" {{ $status->assigned_fire_name == 'Large Fire Support' ? 'selected' : '' }}>Large Fire Support</option>
                     <option value="Project" {{ $status->assigned_fire_name == 'Project' ? 'selected' : '' }}>Project</option>
+                    <option value="Unavailable: Mechanical" {{ $status->assigned_fire_name == 'Unavailable: Mechanical' ? 'selected' : '' }}>Unavailable: Mechanical</option>
                     <option value="Other" {{ $status->assigned_fire_name == 'Other' ? 'selected' : '' }}>Other</option>
                 </select>
             </div>

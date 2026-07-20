@@ -13,9 +13,6 @@ const ICON_SIZE_BY_BADGE = {
 const ICON_ONLY_BADGE_STYLES = {
     root: {
         '--badge-border-width': '2px',
-        // Darken the light-variant text/icon for WCAG AA contrast on red tint
-        '--badge-color': 'var(--mantine-color-red-9)',
-        '--badge-bg': 'var(--mantine-color-red-1)',
     },
     label: {
         display: 'inline-flex',
@@ -27,7 +24,6 @@ const ICON_ONLY_BADGE_STYLES = {
 
 /**
  * Tag-style label for personnel currently on staffed incidents.
- * Uses a dark fire-red on a light tint so text/icon stay readable.
  * Omit `count` to render an icon-only key/legend badge.
  */
 export function OnIncidentsLabel({ count, size = 'lg', ...badgeProps }) {
@@ -56,7 +52,7 @@ export function OnIncidentsLabel({ count, size = 'lg', ...badgeProps }) {
         <Tooltip label={tooltipLabel} withArrow openDelay={200}>
             <Badge
                 variant="light"
-                color="red"
+                color="blue"
                 radius="sm"
                 size={size}
                 aria-label={ariaLabel}
@@ -69,9 +65,6 @@ export function OnIncidentsLabel({ count, size = 'lg', ...badgeProps }) {
                         : {
                               root: {
                                   '--badge-border-width': '2px',
-                                  // Darken the light-variant text/icon for WCAG AA contrast on red tint
-                                  '--badge-color': 'var(--mantine-color-red-9)',
-                                  '--badge-bg': 'var(--mantine-color-red-1)',
                               },
                               label: {
                                   minWidth: '2ch',
