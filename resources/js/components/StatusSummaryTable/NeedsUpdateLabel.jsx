@@ -23,7 +23,7 @@ const BADGE_STYLES = {
 };
 
 /**
- * Compact badge indicating crew status data is stale (18+ hours old).
+ * Compact badge indicating aircraft status data is stale (more than 18 hours old).
  */
 export function NeedsUpdateLabel({ size = 'lg', ...badgeProps }) {
     const iconSize = ICON_SIZE_BY_BADGE[size] ?? ICON_SIZE_BY_BADGE.sm;

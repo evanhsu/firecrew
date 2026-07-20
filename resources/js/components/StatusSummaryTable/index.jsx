@@ -173,8 +173,16 @@ const SummaryTotals = ({ crews }) => {
         computeTotals(crews);
 
     const stats = [
-        { label: 'Staffing', value: totalStaffing },
-        { label: 'On incidents', value: totalPersonnelOnStaffedIncidents },
+        {
+            label: 'Staffing',
+            value: totalStaffing,
+            legend: <PersonnelCountLabel />,
+        },
+        {
+            label: 'On incidents',
+            value: totalPersonnelOnStaffedIncidents,
+            legend: <OnIncidentsLabel />,
+        },
         { label: 'Boosters in', value: totalBoosters },
     ];
 
@@ -182,9 +190,17 @@ const SummaryTotals = ({ crews }) => {
         <SimpleGrid cols={3} spacing="sm">
             {stats.map((stat) => (
                 <Paper key={stat.label} withBorder p="md" radius="md">
-                    <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                        {stat.label}
-                    </Text>
+                    <Group
+                        justify="space-between"
+                        align="flex-start"
+                        gap="xs"
+                        wrap="nowrap"
+                    >
+                        <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                            {stat.label}
+                        </Text>
+                        {stat.legend ?? null}
+                    </Group>
                     <Text size="xl" fw={700} lh={1.2} mt={4}>
                         {stat.value}
                     </Text>
@@ -227,7 +243,7 @@ const StaffedIncidentList = ({ jsonString }) => {
                         align="flex-start"
                     >
                         {personnel !== '' && (
-                            <PersonnelCountLabel count={personnel} />
+                            <OnIncidentsLabel count={personnel} />
                         )}
                         <Box style={{ flex: 1, minWidth: 0 }}>
                             <Text size="sm" fw={500} lh={1.3}>
