@@ -22,7 +22,7 @@
             <a role="button" class="control-label-helper" tabindex="0" data-toggle="popover" title="{{ $resource->staffingCategory1() }}" data-trigger="focus" data-content="{{ $resource->staffingCategory1Explanation() }}">
                 <span class="glyphicon glyphicon-question-sign"></span>
             </a>
-            <div class="col-xs-2 col-md-1">
+            <div class="col-xs-4 col-sm-2">
                 <input type="text" name="staffing_category1" id="staffing_category1" class="hidden" value="{{ $resource->staffingCategory1() }}">
                 <input type="text" name="staffing_value1" id="staffing_value1" class="form-control"  value="{{ $status->staffing_value1 }}">
             </div>
