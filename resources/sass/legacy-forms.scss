@@ -451,6 +451,139 @@ textarea.form-control {
     line-height: 1;
 }
 
+// Staffed Incidents dynamic rows on helicopter status forms
+.staffed-incidents-rows {
+    // Shared column tracks so the header and every data row stay aligned.
+    // Personnel (2 digits) | Incident (OR-OCF-123456) | Est. Demob (MM/DD/YYYY) | delete
+    // Incident/demob mins include form-control horizontal padding (~1.5rem).
+    // Actions column is fixed to the delete button width (not `auto`) so an
+    // empty header cell doesn't collapse and shift the demob label right.
+    display: grid;
+    grid-template-columns:
+        4.5rem
+        minmax(calc(13ch + 1.5rem), 1fr)
+        minmax(calc(10ch + 1.5rem), 9.5rem)
+        2.75rem;
+    column-gap: 0.5rem;
+    row-gap: 0.5rem;
+    width: 100%;
+}
+
+.staffed-incidents-header,
+.staffed-incident-row {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: end;
+}
+
+.staffed-incidents-header {
+    margin-bottom: -0.25rem;
+    text-align: left;
+
+    span {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: $color-text-muted;
+        line-height: 1.2;
+        text-align: left;
+    }
+}
+
+.staffed-incident-field {
+    position: relative;
+    min-width: 0;
+}
+
+.staffed-incident-field-label {
+    // Visually hidden on desktop (header labels the columns); shown on mobile.
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.staffed-incident-personnel-col .form-control,
+.staffed-incident-name-col .form-control,
+.staffed-incident-demob-col .form-control {
+    width: 100%;
+    min-width: 0;
+}
+
+.staffed-incident-actions-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+
+    .btn {
+        padding-left: 0.55rem;
+        padding-right: 0.55rem;
+    }
+}
+
+@media (max-width: ($breakpoint-sm - 1px)) {
+    .staffed-incidents-rows {
+        display: block;
+    }
+
+    .staffed-incidents-header {
+        display: none;
+    }
+
+    .staffed-incident-row {
+        display: grid;
+        grid-column: auto;
+        grid-template-columns: 4.5rem minmax(0, 1fr) 2.75rem;
+        grid-template-areas:
+            'personnel name actions'
+            'demob demob demob';
+        column-gap: 0.5rem;
+        row-gap: 0.5rem;
+        align-items: start;
+        margin-bottom: 0.5rem;
+    }
+
+    .staffed-incident-personnel-col {
+        grid-area: personnel;
+    }
+
+    .staffed-incident-name-col {
+        grid-area: name;
+    }
+
+    .staffed-incident-demob-col {
+        grid-area: demob;
+    }
+
+    .staffed-incident-actions-col {
+        grid-area: actions;
+        align-items: flex-end;
+        padding-bottom: 0.15rem;
+        height: 100%;
+    }
+
+    .staffed-incident-field-label {
+        position: static;
+        width: auto;
+        height: auto;
+        margin: 0 0 0.2rem;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: $color-text-muted;
+        line-height: 1.2;
+    }
+}
+
 // Lat/Lon coordinate rows on status forms
 .latlon-form-group {
     align-items: flex-start !important;
