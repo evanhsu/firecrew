@@ -13,6 +13,8 @@ const ICON_SIZE_BY_BADGE = {
 const BADGE_STYLES = {
     root: {
         '--badge-border-width': '2px',
+        // Prevent flex parents from compressing the icon-only badge (overflow:hidden clips the icon)
+        flexShrink: 0,
     },
     label: {
         display: 'inline-flex',

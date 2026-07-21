@@ -28,8 +28,9 @@ const MECHANICAL_ASSIGNMENT = 'Unavailable: Mechanical';
 /** Shared column template so header + nested aircraft rows stay aligned. */
 const AIRCRAFT_GRID_COLUMNS = {
     base: 'minmax(0, 1fr) auto',
-    sm: 'minmax(5rem, 1fr) 4.5rem minmax(0, 1.3fr) 2.5rem',
-    md: 'minmax(5rem, 1fr) 4.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 2.5rem',
+    // Status column is `auto` so 1–2 icon badges keep their natural width.
+    sm: 'minmax(5rem, 1fr) 4.5rem minmax(0, 1.3fr) auto',
+    md: 'minmax(5rem, 1fr) 4.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) auto',
 };
 
 const aircraftGridStyle = (breakpoint) => ({
@@ -207,13 +208,19 @@ const SummaryTotals = ({ crews }) => {
                         gap="xs"
                         wrap="nowrap"
                     >
-                        <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                        <Text
+                            size="xs"
+                            c="dimmed"
+                            tt="uppercase"
+                            fw={600}
+                            truncate="end"
+                            style={{ minWidth: 0 }}
+                        >
                             {stat.label}
                         </Text>
-                        {stat.legend ?? null}
                     </Group>
                     <Text size="xl" fw={700} lh={1.2} mt={4}>
-                        {stat.value}
+                        {stat.legend ?? null} {stat.value}
                     </Text>
                 </Paper>
             ))}
@@ -476,8 +483,7 @@ const OverviewHeader = () => (
 
 const AircraftOverviewRow = ({ resource }) => {
     const identifier = resource.get('identifier')?.toUpperCase() || '—';
-    const location =
-        resource.getIn(['latest_status', 'location_name']) || '—';
+    const location = resource.getIn(['latest_status', 'location_name']) || '—';
     const assignment =
         resource.getIn(['latest_status', 'assigned_fire_name']) || '—';
     const staffing = staffingValues(resource);
