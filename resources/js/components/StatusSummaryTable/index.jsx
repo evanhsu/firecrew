@@ -27,10 +27,16 @@ const MECHANICAL_ASSIGNMENT = 'Unavailable: Mechanical';
 
 /** Shared column template so header + nested aircraft rows stay aligned. */
 const AIRCRAFT_GRID_COLUMNS = {
-    base: 'minmax(0, 1fr) auto',
-    sm: 'minmax(5rem, 1fr) 4.5rem minmax(0, 1.3fr) 2.5rem',
-    md: 'minmax(5rem, 1fr) 4.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 2.5rem',
+    // Fixed tracks for Staffing / On-incidents / Status so `1fr` columns
+    // compute identically on every row (an `auto` Status column shifts the
+    // badge columns when one row has status icons and another does not).
+    base: 'minmax(0, 1fr) 3.75rem 3.75rem 5rem',
+    sm: 'minmax(5rem, 1fr) 3.75rem 5.5rem minmax(0, 1.3fr) 5rem',
+    md: 'minmax(5rem, 1fr) 3.75rem 5.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 5rem',
 };
+
+/** Keep overview count badges the same width so 1- and 2-digit values align. */
+const OVERVIEW_COUNT_BADGE_PROPS = { w: '3.75rem' };
 
 const aircraftGridStyle = (breakpoint) => ({
     display: 'grid',
@@ -88,15 +94,6 @@ function hasMechanicalProblem(resource) {
     );
 }
 
-function getCrewTotalStaffing(crewRow) {
-    const resources = crewRow.get('statusable_resources') || fromJS([]);
-
-    return resources.reduce((total, resource) => {
-        const staffing = parseInt(staffingValues(resource), 10);
-        return Number.isNaN(staffing) ? total : total + staffing;
-    }, 0);
-}
-
 function getResourcePersonnelOnIncidents(resource) {
     const staffedIncidents = resource.getIn(['latest_status', 'comments1'], '');
     if (!staffedIncidents) {
@@ -117,15 +114,6 @@ function getResourcePersonnelOnIncidents(resource) {
             ? personnelTotal
             : personnelTotal + personnel;
     }, 0);
-}
-
-function getCrewTotalOnIncidents(crewRow) {
-    const resources = crewRow.get('statusable_resources') || fromJS([]);
-
-    return resources.reduce(
-        (total, resource) => total + getResourcePersonnelOnIncidents(resource),
-        0
-    );
 }
 
 function computeTotals(crews) {
@@ -207,14 +195,23 @@ const SummaryTotals = ({ crews }) => {
                         gap="xs"
                         wrap="nowrap"
                     >
-                        <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                        <Text
+                            size="xs"
+                            c="dimmed"
+                            tt="uppercase"
+                            fw={600}
+                            truncate="end"
+                            style={{ minWidth: 0 }}
+                        >
                             {stat.label}
                         </Text>
-                        {stat.legend ?? null}
                     </Group>
-                    <Text size="xl" fw={700} lh={1.2} mt={4}>
-                        {stat.value}
-                    </Text>
+                    <Group gap="xs" align="center" mt={4} wrap="nowrap">
+                        {stat.legend ?? null}
+                        <Text size="xl" fw={700} lh={1.2}>
+                            {stat.value}
+                        </Text>
+                    </Group>
                 </Paper>
             ))}
         </SimpleGrid>
@@ -448,6 +445,9 @@ const OverviewHeader = () => (
                 Staffing
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                On incidents
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                 Location
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
@@ -460,6 +460,9 @@ const OverviewHeader = () => (
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                 Staffing
+            </Text>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                On incidents
             </Text>
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                 Location
@@ -476,13 +479,13 @@ const OverviewHeader = () => (
 
 const AircraftOverviewRow = ({ resource }) => {
     const identifier = resource.get('identifier')?.toUpperCase() || '—';
-    const location =
-        resource.getIn(['latest_status', 'location_name']) || '—';
+    const location = resource.getIn(['latest_status', 'location_name']) || '—';
     const assignment =
         resource.getIn(['latest_status', 'assigned_fire_name']) || '—';
     const staffing = staffingValues(resource);
     const staffingCount = parseInt(staffing, 10);
     const safeStaffing = Number.isNaN(staffingCount) ? 0 : staffingCount;
+    const onIncidents = getResourcePersonnelOnIncidents(resource);
     const stale = isResourceStale(resource);
     const mechanical = hasMechanicalProblem(resource);
 
@@ -522,9 +525,16 @@ const AircraftOverviewRow = ({ resource }) => {
                         {location}
                     </Text>
                 </Box>
+                <PersonnelCountLabel
+                    count={safeStaffing}
+                    {...OVERVIEW_COUNT_BADGE_PROPS}
+                />
+                <OnIncidentsLabel
+                    count={onIncidents}
+                    {...OVERVIEW_COUNT_BADGE_PROPS}
+                />
                 <Group gap={6} wrap="nowrap" justify="flex-end">
                     {renderStatusLabels()}
-                    <PersonnelCountLabel count={safeStaffing} />
                 </Group>
             </Box>
 
@@ -535,7 +545,14 @@ const AircraftOverviewRow = ({ resource }) => {
                 style={aircraftGridStyle('sm')}
             >
                 <OverviewCell stale={stale}>{identifier}</OverviewCell>
-                <PersonnelCountLabel count={safeStaffing} />
+                <PersonnelCountLabel
+                    count={safeStaffing}
+                    {...OVERVIEW_COUNT_BADGE_PROPS}
+                />
+                <OnIncidentsLabel
+                    count={onIncidents}
+                    {...OVERVIEW_COUNT_BADGE_PROPS}
+                />
                 <OverviewCell stale={stale}>{location}</OverviewCell>
                 <Group gap={6} wrap="nowrap" justify="flex-end">
                     {renderStatusLabels()}
@@ -545,7 +562,14 @@ const AircraftOverviewRow = ({ resource }) => {
             {/* Desktop */}
             <Box visibleFrom="md" style={aircraftGridStyle('md')}>
                 <OverviewCell stale={stale}>{identifier}</OverviewCell>
-                <PersonnelCountLabel count={safeStaffing} />
+                <PersonnelCountLabel
+                    count={safeStaffing}
+                    {...OVERVIEW_COUNT_BADGE_PROPS}
+                />
+                <OnIncidentsLabel
+                    count={onIncidents}
+                    {...OVERVIEW_COUNT_BADGE_PROPS}
+                />
                 <OverviewCell stale={stale}>{location}</OverviewCell>
                 <OverviewCell stale={stale}>{assignment}</OverviewCell>
                 <Group gap={6} wrap="nowrap" justify="flex-end">
@@ -566,8 +590,6 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
     }
 
     const resources = crewRow.get('statusable_resources');
-    const totalStaffing = getCrewTotalStaffing(crewRow);
-    const totalOnIncidents = getCrewTotalOnIncidents(crewRow);
     const phone = crewRow.get('phone');
 
     return (
@@ -597,22 +619,11 @@ const CrewRow = ({ crewRow, isExpanded, onToggle }) => {
                     textAlign: 'left',
                 }}
             >
-                <Group
-                    justify="space-between"
-                    align="center"
-                    gap="sm"
-                    wrap="nowrap"
-                >
-                    <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-                        <ExpandIcon expanded={isExpanded} />
-                        <Text fw={700} size="sm" truncate="end">
-                            {crewRow.get('name')}
-                        </Text>
-                    </Group>
-                    <Group gap={6} wrap="nowrap">
-                        <PersonnelCountLabel count={totalStaffing || 0} />
-                        <OnIncidentsLabel count={totalOnIncidents || 0} />
-                    </Group>
+                <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+                    <ExpandIcon expanded={isExpanded} />
+                    <Text fw={700} size="sm" truncate="end">
+                        {crewRow.get('name')}
+                    </Text>
                 </Group>
 
                 {!isExpanded &&

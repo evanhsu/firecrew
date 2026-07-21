@@ -13,6 +13,8 @@ const ICON_SIZE_BY_BADGE = {
 const ICON_ONLY_BADGE_STYLES = {
     root: {
         '--badge-border-width': '2px',
+        // Prevent flex parents from compressing the icon-only badge (overflow:hidden clips the icon)
+        flexShrink: 0,
     },
     label: {
         display: 'inline-flex',
@@ -55,7 +57,7 @@ export function PersonnelCountLabel({ count, size = 'lg', ...badgeProps }) {
                 size={size}
                 aria-label={ariaLabel}
                 leftSection={iconOnly ? undefined : icon}
-                px={iconOnly ? 6 : undefined}
+                px={6}
                 bd="2px solid var(--badge-color)"
                 styles={
                     iconOnly
@@ -63,6 +65,7 @@ export function PersonnelCountLabel({ count, size = 'lg', ...badgeProps }) {
                         : {
                               root: {
                                   '--badge-border-width': '2px',
+                                  flexShrink: 0,
                               },
                               label: {
                                   minWidth: '2ch',

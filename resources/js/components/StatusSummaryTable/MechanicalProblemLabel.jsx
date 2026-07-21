@@ -16,6 +16,8 @@ const BADGE_STYLES = {
         // Darken the light-variant text/icon for WCAG AA contrast on red tint
         '--badge-color': 'var(--mantine-color-red-9)',
         '--badge-bg': 'var(--mantine-color-red-1)',
+        // Prevent flex parents from compressing the icon-only badge (overflow:hidden clips the icon)
+        flexShrink: 0,
     },
     label: {
         display: 'inline-flex',

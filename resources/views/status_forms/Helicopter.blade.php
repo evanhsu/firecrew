@@ -22,7 +22,7 @@
             <a role="button" class="control-label-helper" tabindex="0" data-toggle="popover" title="{{ $resource->staffingCategory1() }}" data-trigger="focus" data-content="{{ $resource->staffingCategory1Explanation() }}">
                 <span class="glyphicon glyphicon-question-sign"></span>
             </a>
-            <div class="col-xs-2 col-md-1">
+            <div class="col-xs-4 col-sm-2">
                 <input type="text" name="staffing_category1" id="staffing_category1" class="hidden" value="{{ $resource->staffingCategory1() }}">
                 <input type="text" name="staffing_value1" id="staffing_value1" class="form-control"  value="{{ $status->staffing_value1 }}">
             </div>
@@ -122,7 +122,7 @@
             <a role="button" class="control-label-helper" tabindex="0" data-toggle="popover" title="Staffed Incidents" data-trigger="focus" data-content="i.e. MHF-355: Parker+3">
                 <span class="glyphicon glyphicon-question-sign"></span>
             </a>
-            <div class="col-xs-12 col-sm-6 col-md-6">
+            <div class="col-xs-12 col-sm-10 col-md-8">
                 <div class="staffed-incidents-rows">
                     <!-- Rows will be inserted here by JS -->
                 </div>
@@ -149,16 +149,64 @@
                             initialIncidents = [];
                         }
                     @endif
-                        
+
+                    function escapeAttr(value) {
+                        return value
+                            ? value.replace(/&/g, '&amp;').replace(/\"/g, '&quot;')
+                            : '';
+                    }
+
+                    function createStaffedIncidentHeader() {
+                        return `
+                            <div class="staffed-incidents-header" aria-hidden="true">
+                                <span class="staffed-incident-personnel-col">Personnel</span>
+                                <span class="staffed-incident-name-col">Incident</span>
+                                <span class="staffed-incident-demob-col">Est. Demob Date</span>
+                                <span class="staffed-incident-actions-col"></span>
+                            </div>
+                        `;
+                    }
+
                     function createStaffedIncidentRow(index, data = {}) {
                         return `
-                            <div class="staffed-incident-row" data-index="${index}" style="margin-bottom:8px; display: flex">
-                                    <input style="margin-right: 10px; width: 100px;" type="text" name="staffed_incidents[${index}][personnel]" class="form-control" placeholder="Personnel" value="${data.personnel ? data.personnel.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
-                                    <input style="margin-right: 10px" type="text" name="staffed_incidents[${index}][incident_name]" class="form-control" placeholder="Incident Name/Number" value="${data.incident_name ? data.incident_name.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
-                                    <input style="margin-right: 10px; width: 150px;" type="text" name="staffed_incidents[${index}][demob]" class="form-control" placeholder="Est. Demob Date" value="${data.demob ? data.demob.replace(/&/g, '&amp;').replace(/\"/g, '&quot;') : ''}">
-                                    <button type="button" class="btn btn-danger delete-staffed-incident-row">
+                            <div class="staffed-incident-row" data-index="${index}">
+                                <div class="staffed-incident-field staffed-incident-personnel-col">
+                                    <label class="staffed-incident-field-label" for="staffed_incidents_${index}_personnel">Personnel</label>
+                                    <input
+                                        id="staffed_incidents_${index}_personnel"
+                                        type="text"
+                                        inputmode="numeric"
+                                        name="staffed_incidents[${index}][personnel]"
+                                        class="form-control"
+                                        value="${escapeAttr(data.personnel)}"
+                                    >
+                                </div>
+                                <div class="staffed-incident-field staffed-incident-name-col">
+                                    <label class="staffed-incident-field-label" for="staffed_incidents_${index}_incident_name">Incident</label>
+                                    <input
+                                        id="staffed_incidents_${index}_incident_name"
+                                        type="text"
+                                        name="staffed_incidents[${index}][incident_name]"
+                                        class="form-control"
+                                        value="${escapeAttr(data.incident_name)}"
+                                    >
+                                </div>
+                                <div class="staffed-incident-field staffed-incident-demob-col">
+                                    <label class="staffed-incident-field-label" for="staffed_incidents_${index}_demob">Est. Demob Date</label>
+                                    <input
+                                        id="staffed_incidents_${index}_demob"
+                                        type="text"
+                                        name="staffed_incidents[${index}][demob]"
+                                        class="form-control"
+                                        placeholder="MM/DD/YYYY"
+                                        value="${escapeAttr(data.demob)}"
+                                    >
+                                </div>
+                                <div class="staffed-incident-actions-col">
+                                    <button type="button" class="btn btn-danger delete-staffed-incident-row" aria-label="Remove incident">
                                         <span class="glyphicon glyphicon-trash"></span>
                                     </button>
+                                </div>
                             </div>
                         `;
                     }
@@ -166,7 +214,7 @@
                     function renderStaffedIncidentRows(formInstance, incidents) {
                         const container = formInstance.querySelector('.staffed-incidents-rows');
                         // console.log('Rendering staffed incident rows:', incidents);
-                        container.innerHTML = '';
+                        container.innerHTML = createStaffedIncidentHeader();
                         incidents.forEach((row, idx) => {
                             container.innerHTML += createStaffedIncidentRow(idx, row);
                         });
