@@ -59,7 +59,7 @@ export function OnIncidentsLabel({ count, size = 'lg', ...badgeProps }) {
                 size={size}
                 aria-label={ariaLabel}
                 leftSection={iconOnly ? undefined : icon}
-                px={iconOnly ? 6 : undefined}
+                px={6}
                 bd="2px solid var(--badge-color)"
                 styles={
                     iconOnly

@@ -30,13 +30,13 @@ const AIRCRAFT_GRID_COLUMNS = {
     // Fixed tracks for Staffing / On-incidents / Status so `1fr` columns
     // compute identically on every row (an `auto` Status column shifts the
     // badge columns when one row has status icons and another does not).
-    base: 'minmax(0, 1fr) 4.5rem 4.5rem 5rem',
-    sm: 'minmax(5rem, 1fr) 4.5rem 5.5rem minmax(0, 1.3fr) 5rem',
-    md: 'minmax(5rem, 1fr) 4.5rem 5.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 5rem',
+    base: 'minmax(0, 1fr) 3.75rem 3.75rem 5rem',
+    sm: 'minmax(5rem, 1fr) 3.75rem 5.5rem minmax(0, 1.3fr) 5rem',
+    md: 'minmax(5rem, 1fr) 3.75rem 5.5rem minmax(0, 1.1fr) minmax(0, 1.2fr) 5rem',
 };
 
 /** Keep overview count badges the same width so 1- and 2-digit values align. */
-const OVERVIEW_COUNT_BADGE_PROPS = { w: '4.5rem' };
+const OVERVIEW_COUNT_BADGE_PROPS = { w: '3.75rem' };
 
 const aircraftGridStyle = (breakpoint) => ({
     display: 'grid',
@@ -206,9 +206,12 @@ const SummaryTotals = ({ crews }) => {
                             {stat.label}
                         </Text>
                     </Group>
-                    <Text size="xl" fw={700} lh={1.2} mt={4}>
-                        {stat.legend ?? null} {stat.value}
-                    </Text>
+                    <Group gap="xs" align="center" mt={4} wrap="nowrap">
+                        {stat.legend ?? null}
+                        <Text size="xl" fw={700} lh={1.2}>
+                            {stat.value}
+                        </Text>
+                    </Group>
                 </Paper>
             ))}
         </SimpleGrid>
