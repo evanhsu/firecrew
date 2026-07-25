@@ -4,15 +4,12 @@ import { useEffect } from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 import StatusSummaryTable from '../../components/StatusSummaryTable';
-import StatusSummaryTableClassic from '../../components/StatusSummaryTableClassic';
-import { SummaryUiMigrationBanner } from '../../components/SummaryUiMigrationBanner';
 import {
     fetchSummary,
     receiveCrewStatusUpdate,
     receiveResourceStatusUpdate,
 } from './actions';
 import { selectSummary } from './selectors';
-import { useSummaryUiPreference } from './useSummaryUiPreference';
 
 export type StatusSummaryProps = {
     crews: List<any>;
@@ -21,16 +18,30 @@ export type StatusSummaryProps = {
     receiveResourceStatusUpdate: (event: any) => void;
 };
 
-const StatusSummary = (props: StatusSummaryProps) => {
-    const {
-        uiMode,
-        showBanner,
-        switchToNewUi,
-        revertToLegacyUi,
-        dismissBanner,
-    } = useSummaryUiPreference();
+/**
+ * During the staffing-summary UI migration, clients could opt into the legacy
+ * layout via localStorage (`firecrew.summaryUiMigration`). That elective path
+ * (classic table, migration banner, preference helpers) has been removed, so
+ * the key is no longer read — but browsers that previously chose legacy (or
+ * dismissed the banner) still have the stale entry. Remove it so we don't leave
+ * dead preference data around after the migration is complete. Safe to delete
+ * this cleanup once enough time has passed that old clients have loaded a
+ * post-migration build at least once.
+ */
+const LEGACY_SUMMARY_UI_PREFERENCE_KEY = 'firecrew.summaryUiMigration';
 
+function clearStaleSummaryUiPreference(): void {
+    try {
+        localStorage.removeItem(LEGACY_SUMMARY_UI_PREFERENCE_KEY);
+    } catch {
+        // Ignore errors (probably caused by the key already being removed)
+    }
+}
+
+const StatusSummary = (props: StatusSummaryProps) => {
     useEffect(() => {
+        clearStaleSummaryUiPreference();
+
         props.fetchSummary();
 
         window.Echo.channel('publicStatusUpdates').listen(
@@ -48,23 +59,7 @@ const StatusSummary = (props: StatusSummaryProps) => {
         );
     }, []);
 
-    return (
-        <>
-            {showBanner && (
-                <SummaryUiMigrationBanner
-                    uiMode={uiMode}
-                    onTryNewUi={switchToNewUi}
-                    onRevertToLegacy={revertToLegacyUi}
-                    onDismiss={dismissBanner}
-                />
-            )}
-            {uiMode === 'legacy' ? (
-                <StatusSummaryTableClassic crews={props.crews} />
-            ) : (
-                <StatusSummaryTable crews={props.crews} />
-            )}
-        </>
-    );
+    return <StatusSummaryTable crews={props.crews} />;
 };
 
 StatusSummary.propTypes = {
