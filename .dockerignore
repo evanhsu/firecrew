@@ -1,5 +1,12 @@
 .idea
 .env
+# Plaintext and encrypted deploy env files stay out of the image. Runtime
+# config comes from Compose env_file on the droplet, and the browser reads
+# Pusher and the map style from window.Laravel on each request.
+.env.production
+.env.dev
+.env.production.sops
+.env.dev.sops
 .git*
 docker
 node_modules

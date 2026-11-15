@@ -1,0 +1,204 @@
+# Builds firecrew-app on a GitHub-hosted runner and streams it to the droplet
+# with docker save / docker load. There is no container registry.
+#
+# Triggers:
+# - A push to main deploys the dev container (firecrew-dev, tag FIRECREW_DEV_TAG).
+# - A published release deploys the prod container (firecrew, tag FIRECREW_TAG).
+# - workflow_dispatch deploys whichever environment you pick. Leave the sha
+#   input empty to build the tip of the branch you selected. Fill it only when
+#   you want an older commit rebuilt.
+#
+# One image tag (`firecrew-app:<sha>`) works for both environments. Pusher and
+# the map style are filled into window.Laravel from the container env at
+# request time, so the image does not bake environment-specific values.
+#
+# Env files live in this repo encrypted with sops as dotenv. The age private
+# key is the SOPS_AGE_KEY secret. Filenames (.env.production.sops,
+# .env.dev.sops) do not end in `.env`, so encrypt and decrypt must pass
+# `--input-type dotenv --output-type dotenv`. The workflow decrypts only onto
+# the droplet, where Compose reads /opt/stack/env/<service>.env at start.
+
+name: Deploy
+
+on:
+    push:
+        branches: [main]
+        paths-ignore:
+            - "**.md"
+    release:
+        types: [published]
+    workflow_dispatch:
+        inputs:
+            sha:
+                description: Git sha to build. Leave empty to deploy the tip of the branch you selected.
+                required: false
+                type: string
+            environment:
+                description: Which environment to deploy to (dev/prod)
+                required: true
+                type: choice
+                default: dev
+                options:
+                    - dev
+                    - prod
+
+# Dev and prod can run at the same time. A newer push to main cancels an
+# in-progress dev deploy. A release is never cancelled by a later run.
+concurrency:
+    group: firecrew-deploy-${{ github.event_name == 'release' && 'prod' || (github.event_name == 'workflow_dispatch' && inputs.environment) || 'dev' }}
+    cancel-in-progress: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'dev') }}
+
+permissions:
+    contents: read
+
+jobs:
+    test:
+        name: Run PHPUnit
+        runs-on: ubuntu-latest
+        services:
+            mysql:
+                image: mysql:8.3
+                env:
+                    MYSQL_ROOT_PASSWORD: password
+                    MYSQL_DATABASE: firecrew_test
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping -ppassword"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: "8.4"
+                  extensions: mbstring, pdo_mysql
+                  coverage: none
+
+            - name: Install Composer dependencies
+              run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+            - name: Run tests
+              run: php artisan test
+              env:
+                  APP_KEY: base64:aUPKkotNRs3KxlIYKREkFHI5cO2bzWiIoqt7uvdyrWI=
+                  DB_CONNECTION: mysql
+                  DB_HOST: 127.0.0.1
+                  DB_PORT: 3306
+                  DB_DATABASE: firecrew_test
+                  DB_USERNAME: root
+                  DB_PASSWORD: password
+
+    deploy:
+        name: Build image and deploy
+        needs: test
+        runs-on: ubuntu-latest
+        env:
+            APP_IMAGE: firecrew-app
+            TAG_KEY_PROD: FIRECREW_TAG
+            TAG_KEY_DEV: FIRECREW_DEV_TAG
+            SERVICE_PROD: firecrew
+            SERVICE_DEV: firecrew-dev
+        steps:
+            - name: Decide what to build
+              id: plan
+              env:
+                  INPUT_SHA: ${{ inputs.sha }}
+                  INPUT_ENV: ${{ inputs.environment }}
+              run: |
+                  set -euo pipefail
+
+                  # A manual run can name an older commit. Push and release always
+                  # build the commit that triggered the workflow.
+                  sha="${GITHUB_SHA}"
+                  if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ -n "${INPUT_SHA}" ]; then
+                    sha="${INPUT_SHA}"
+                  fi
+                  if ! [[ "$sha" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+                    echo "The sha must be 7 to 40 hex characters." >&2
+                    exit 1
+                  fi
+
+                  # Push to main is dev. A published release is prod. A manual run
+                  # uses the environment input, and anything else is dev.
+                  environment=dev
+                  if [ "${GITHUB_EVENT_NAME}" = "release" ]; then
+                    environment=prod
+                  elif [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+                    environment="${INPUT_ENV}"
+                  fi
+
+                  case "$environment" in
+                    prod)
+                      echo "tag_key=${TAG_KEY_PROD}" >> "$GITHUB_OUTPUT"
+                      echo "service=${SERVICE_PROD}" >> "$GITHUB_OUTPUT"
+                      echo "env_src=.env.production.sops" >> "$GITHUB_OUTPUT"
+                      ;;
+                    dev)
+                      echo "tag_key=${TAG_KEY_DEV}" >> "$GITHUB_OUTPUT"
+                      echo "service=${SERVICE_DEV}" >> "$GITHUB_OUTPUT"
+                      echo "env_src=.env.dev.sops" >> "$GITHUB_OUTPUT"
+                      ;;
+                    *)
+                      echo "Environment must be dev or prod." >&2
+                      exit 1
+                      ;;
+                  esac
+
+                  # One image tag for both environments. Runtime config comes from
+                  # /opt/stack/env/<service>.env on the droplet.
+                  echo "image_tag=${sha}" >> "$GITHUB_OUTPUT"
+                  echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+                  echo "environment=${environment}" >> "$GITHUB_OUTPUT"
+
+            - name: Check out the commit
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ steps.plan.outputs.sha }}
+
+            - name: Build the image
+              run: docker build -t "${APP_IMAGE}:${{ steps.plan.outputs.image_tag }}" .
+
+            - name: Install the deploy key
+              env:
+                  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+              run: |
+                  install -d -m 700 ~/.ssh
+                  printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy
+                  chmod 600 ~/.ssh/deploy
+                  ssh-keyscan -H "${{ secrets.DROPLET_HOST }}" >> ~/.ssh/known_hosts
+
+            - name: Install sops
+              run: |
+                  curl -fsSL -o /usr/local/bin/sops \
+                    https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64
+                  chmod +x /usr/local/bin/sops
+
+            - name: Install the env file, load the image, and restart the container
+              env:
+                  DROPLET_HOST: deploy@${{ secrets.DROPLET_HOST }}
+                  SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+              run: |
+                  set -euo pipefail
+                  src="${{ steps.plan.outputs.env_src }}"
+                  if [ ! -f "$src" ]; then
+                    echo "Missing ${src}." >&2
+                    echo "Encrypt that environment's env file with sops and commit it as ${src} before deploying ${{ steps.plan.outputs.environment }}." >&2
+                    echo "Prod reads .env.production.sops (database firecrew). Dev reads .env.dev.sops (database firecrew_dev). They cannot share a file, because create-app-users.sh checks that the username and database match the service." >&2
+                    exit 1
+                  fi
+                  # Filenames do not end in .env, so sops needs the dotenv type flags.
+                  sops -d --input-type dotenv --output-type dotenv "$src" > /tmp/app.env
+                  ssh_opts=(-i ~/.ssh/deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+                  ssh "${ssh_opts[@]}" "$DROPLET_HOST" \
+                    "umask 077; cat > /opt/stack/env/${{ steps.plan.outputs.service }}.env" \
+                    < /tmp/app.env
+                  ssh "${ssh_opts[@]}" "$DROPLET_HOST" \
+                    "sudo /opt/stack/scripts/create-app-users.sh"
+                  docker save "${APP_IMAGE}:${{ steps.plan.outputs.image_tag }}" \
+                    | ssh "${ssh_opts[@]}" "$DROPLET_HOST" docker load
+                  ssh "${ssh_opts[@]}" "$DROPLET_HOST" \
+                    "/opt/stack/scripts/set-image-tag.sh '${{ steps.plan.outputs.tag_key }}' '${{ steps.plan.outputs.service }}' '${APP_IMAGE}' '${{ steps.plan.outputs.image_tag }}'"

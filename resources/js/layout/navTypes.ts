@@ -32,6 +32,7 @@ declare global {
                 cluster?: string;
                 encrypted?: boolean;
             };
+            mapStyleUrl?: string;
         };
     }
 }

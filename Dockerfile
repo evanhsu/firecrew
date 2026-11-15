@@ -8,10 +8,10 @@ COPY ./.yarnrc.yml ./.yarnrc.yml
 RUN ["corepack", "enable"]
 RUN ["yarn", "install"]
 
-# Build the Laravel js frontend.
+# Build the Laravel js frontend. Pusher and the map style are read from
+# window.Laravel at request time, so this stage does not need an env file.
 COPY ./vite.config.js ./tsconfig.json ./postcss.config.cjs ./
 COPY ./resources ./resources
-COPY ./.env.production ./.env
 RUN ["yarn", "build"]
 
 
@@ -25,6 +25,9 @@ RUN apk add oniguruma-dev postgresql-dev libxml2-dev
 
 ENV WEB_DOCUMENT_ROOT=/app/public
 ENV APP_ENV=production
+# Dummy key for artisan during the image build only. Runtime secrets come from
+# the Compose env_file on the droplet, and this ENV is not in the final stage.
+ENV APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
 WORKDIR /app
 # Check the .dockerignore file for files that will be excluded
 COPY . .
@@ -32,7 +35,6 @@ COPY . .
 # Make the entrypoint.sh script executable
 RUN chmod a+x ./entrypoint.sh
 
-COPY ./.env.production ./.env
 # Overwrite the /public folder with output from the frontend build above
 COPY --from=frontend-build /app/public /app/public
 

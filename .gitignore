@@ -9,6 +9,8 @@ node_modules
 .env
 .env.backup
 .env.mcp.local
+.env.production
+.env.dev
 .phpunit.result.cache
 .phpunit.cache/
 phpunit.xml.bak

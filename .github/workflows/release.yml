@@ -3,8 +3,8 @@ name: "Promote to prod"
 on:
   workflow_dispatch:
   # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
-  release:
-    types: [published]
+#   release:
+#     types: [published]
 
 jobs:
   update-k8s-manifest:

@@ -1,0 +1,17 @@
+# Specifies the age key to use for ENCRYPTING the .env files.
+# Anyone with access to this public key can ENCRYPT new values.
+# To DECRYPT, SOPS will look for a private key in:
+#  - Env var: SOPS_AGE_KEY
+#  - The file specified in the env var: SOPS_AGE_KEY_FILE
+#  - MacOS: ~/.config/sops/age/keys.txt
+#
+# Plaintext files are .env.production and .env.dev (gitignored). Encrypted
+# files are .env.production.sops and .env.dev.sops (committed). Those names
+# do not end in `.env`, so encrypt and decrypt must pass
+# `--input-type dotenv --output-type dotenv`. Example:
+#   sops -e --input-type dotenv --output-type dotenv .env.production > .env.production.sops
+#   sops -d --input-type dotenv --output-type dotenv .env.production.sops > .env.production
+creation_rules:
+    - path_regex: \.env(\..+)?$
+      age: >-
+          age105tj5at22k2lfvhvxqkxlthe2sy7r2n8ht6r4m3m70uw768wsgus47etct

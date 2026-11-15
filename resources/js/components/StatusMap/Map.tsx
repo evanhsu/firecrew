@@ -169,7 +169,7 @@ const MapView = forwardRef<StatusMapHandle, StatusMapViewProps>(
         );
 
         const mapStyle =
-            import.meta.env.VITE_MAP_STYLE_URL || DEFAULT_MAP_STYLE;
+            window.Laravel?.mapStyleUrl || DEFAULT_MAP_STYLE;
 
         const handleMapLoad = () => {
             const map = mapRef.current?.getMap();

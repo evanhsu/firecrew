@@ -31,6 +31,7 @@
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'encrypted' => env('PUSHER_APP_ENCRYPTED'),
             ],
+            'mapStyleUrl' => env('VITE_MAP_STYLE_URL', 'https://tiles.openfreemap.org/styles/liberty'),
         ]) !!};
     </script>
 

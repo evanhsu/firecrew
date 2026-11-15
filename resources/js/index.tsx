@@ -29,8 +29,8 @@ declare global {
 
 window.Pusher = Pusher;
 
-const pusherKey = import.meta.env.VITE_PUSHER_APP_KEY;
-const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER;
+const pusherKey = window.Laravel?.pusher?.appKey;
+const pusherCluster = window.Laravel?.pusher?.cluster;
 
 if (pusherKey) {
     window.Echo = new Echo({
