@@ -69,7 +69,7 @@ jobs:
                     --health-timeout=5s
                     --health-retries=5
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -155,7 +155,7 @@ jobs:
                   echo "environment=${environment}" >> "$GITHUB_OUTPUT"
 
             - name: Check out the commit
-              uses: actions/checkout@v4
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   ref: ${{ steps.plan.outputs.sha }}
 
@@ -169,7 +169,7 @@ jobs:
                   install -d -m 700 ~/.ssh
                   printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy
                   chmod 600 ~/.ssh/deploy
-                  ssh-keyscan -H "${{ secrets.DROPLET_HOST }}" >> ~/.ssh/known_hosts
+                  ssh-keyscan -H "${{ vars.DROPLET_HOST }}" >> ~/.ssh/known_hosts
 
             - name: Install sops
               run: |
@@ -179,7 +179,7 @@ jobs:
 
             - name: Install the env file, load the image, and restart the container
               env:
-                  DROPLET_HOST: deploy@${{ secrets.DROPLET_HOST }}
+                  DROPLET_HOST: deploy@${{ vars.DROPLET_HOST }}
                   SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
               run: |
                   set -euo pipefail
