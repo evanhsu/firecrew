@@ -133,14 +133,14 @@ jobs:
 
                   case "$environment" in
                     prod)
-                      echo "tag_key=${TAG_KEY_PROD}" >> "$GITHUB_OUTPUT"
-                      echo "service=${SERVICE_PROD}" >> "$GITHUB_OUTPUT"
-                      echo "env_src=.env.production.sops" >> "$GITHUB_OUTPUT"
+                      tag_key="${TAG_KEY_PROD}"
+                      service="${SERVICE_PROD}"
+                      env_src=".env.production.sops"
                       ;;
                     dev)
-                      echo "tag_key=${TAG_KEY_DEV}" >> "$GITHUB_OUTPUT"
-                      echo "service=${SERVICE_DEV}" >> "$GITHUB_OUTPUT"
-                      echo "env_src=.env.dev.sops" >> "$GITHUB_OUTPUT"
+                      tag_key="${TAG_KEY_DEV}"
+                      service="${SERVICE_DEV}"
+                      env_src=".env.dev.sops"
                       ;;
                     *)
                       echo "Environment must be dev or prod." >&2
@@ -150,9 +150,32 @@ jobs:
 
                   # One image tag for both environments. Runtime config comes from
                   # /opt/stack/env/<service>.env on the droplet.
-                  echo "image_tag=${sha}" >> "$GITHUB_OUTPUT"
-                  echo "sha=${sha}" >> "$GITHUB_OUTPUT"
-                  echo "environment=${environment}" >> "$GITHUB_OUTPUT"
+                  image_tag="${sha}"
+                  {
+                    echo "tag_key=${tag_key}"
+                    echo "service=${service}"
+                    echo "env_src=${env_src}"
+                    echo "image_tag=${image_tag}"
+                    echo "sha=${sha}"
+                    echo "environment=${environment}"
+                  } >> "$GITHUB_OUTPUT"
+
+                  {
+                    echo "## Deploy plan"
+                    echo ""
+                    echo "| Field | Value |"
+                    echo "| --- | --- |"
+                    echo "| Trigger | \`${GITHUB_EVENT_NAME}\` |"
+                    echo "| Environment | \`${environment}\` |"
+                    echo "| Git sha | \`${sha}\` |"
+                    echo "| Image | \`${APP_IMAGE}:${image_tag}\` |"
+                    echo "| Compose service | \`${service}\` |"
+                    echo "| Tag key on droplet | \`${tag_key}\` |"
+                    echo "| Encrypted env file | \`${env_src}\` |"
+                    echo "| Droplet env path | \`/opt/stack/env/${service}.env\` |"
+                  } >> "$GITHUB_STEP_SUMMARY"
+
+                  echo "Deploy plan: ${environment} ← ${APP_IMAGE}:${image_tag} (${service}, ${tag_key}, ${env_src})"
 
             - name: Check out the commit
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
